@@ -13,14 +13,14 @@ tftpd-hpa xinetd ssh
 #python-gtk2-dev libgnomecanvas2-dev libmagick++-dev
 #liblapack-dev bison
 # configuration and tools
-virtualbox dialog rsync fping geeqie pssh lm-sensors
-xsensors gnuplot qtiplot xpdf csh tcsh ksh bc rar unrar
+dialog rsync fping geeqie pssh lm-sensors
+xsensors gnuplot qtiplot xpdf csh tcsh ksh bc 
 gparted zip unzip dsh debootstrap syslinux pxelinux live-build
 # WOL
 etherwake beep
 debconf-utils arno-iptables-firewall
 # octave
-octave octave-info octave-doc 
+octave  octave-doc 
 # openmpi
 libopenmpi-dev openmpi-bin openmpi-doc
 # dynare
@@ -30,10 +30,17 @@ gretl gretl-data gretl-doc gretl-common
 # ganglia, firewall
 ganglia-monitor gmetad libganglia1 ganglia-webfrontend
 librrds-perl librrd2-dev firefox-esr
-apache2 php5 rrdtool php5-gd
+apache2 php7.4 rrdtool php7.4-gd
 # Python
-python-scipy python-matplotlib python-numpy
-ipython python-mpmath python-gmpy python-mpi4py
+python-matplotlib-data 
+ipython3 python-gmpy2-common 
+
+# This section added by jss lists the packages that were
+# previously included, but don't seem to be available from the Debian 
+# repositories, at least without some more troubleshooting.
+# virtualbox rar unrar octave-info python-scipy python-numpy
+# python-mpmath python-mpi4py
+
 # Fixing warning:
 #The XKEYBOARD keymap compiler (xkbcomp) reports:
 #> Warning:          Compat map for group 2 redefined
