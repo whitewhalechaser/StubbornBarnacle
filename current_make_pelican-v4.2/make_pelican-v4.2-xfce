@@ -33,6 +33,8 @@ THISDIR="`pwd`"
 SCRIPTDIR=$THISDIR"/make_pelican"
 
 # cleaning old frontend configuration
+rm -rf build.log config/ packages .build/ cache/bootstrap *~ */*~
+rm -rf auto
 lb clean
 
 #### packages to include on image - place names of packages you want here ####
