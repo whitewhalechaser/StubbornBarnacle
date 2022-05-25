@@ -60,7 +60,8 @@ cat <<CLEAN > auto/clean
 
 set -e
 
-lb clean noauto "${@}"
+#jss note, the below line doesn't work, will move the "lb clean" to the main scripts for now
+#lb clean noauto "${@}"
 
 rm -rf build.log config/ packages .build/ cache/bootstrap *~ */*~
 CLEAN

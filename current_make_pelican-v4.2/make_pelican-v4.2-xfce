@@ -32,6 +32,9 @@
 THISDIR="`pwd`"
 SCRIPTDIR=$THISDIR"/make_pelican"
 
+# cleaning old frontend configuration
+lb clean
+
 #### packages to include on image - place names of packages you want here ####
 . $SCRIPTDIR/pelicanhpc.list.xfce
 
@@ -44,8 +47,6 @@ IMAGENAME="pelicanhpc-v4.2-xfce.iso"
 ################## pelicanhome ###########################
 . $SCRIPTDIR/pelicanhpc.sethome
 
-# cleaning old frontend configuration
-lb clean
 
 ######################################################################################
 ##   !!!!!         END OF NORMAL CONFIGURATION OPTIONS                  !!!!!!!!!   ##
