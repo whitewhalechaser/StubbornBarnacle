@@ -14,7 +14,7 @@ tftpd-hpa xinetd ssh
 #liblapack-dev bison
 # configuration and tools
 dialog rsync fping geeqie pssh lm-sensors
-xsensors gnuplot qtiplot xpdf csh tcsh ksh bc 
+xsensors gnuplot xpdf csh tcsh ksh bc 
 gparted zip unzip dsh debootstrap syslinux pxelinux live-build
 # WOL
 etherwake beep
@@ -39,7 +39,7 @@ ipython3 python-gmpy2-common
 # previously included, but don't seem to be available from the Debian 
 # repositories, at least without some more troubleshooting.
 # virtualbox rar unrar octave-info python-scipy python-numpy
-# python-mpmath python-mpi4py
+# python-mpmath python-mpi4py qtiplot
 
 # Fixing warning:
 #The XKEYBOARD keymap compiler (xkbcomp) reports:
