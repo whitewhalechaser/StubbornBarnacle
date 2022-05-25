@@ -47,12 +47,12 @@ bailout2(){
 	echo "user:$PASSWORD" | /usr/sbin/chpasswd
 	# petry: Change node hostname to be unique based on IP
 	#        This is good both when logged into nodes, but also for ganglia.
-	HOST=$(/sbin/ifconfig | tr -d '\n' |sed "s/.*inet addr:$PELICAN_NETWORK.\([^ ]*\) .*/\1/")
+	HOST=$(/usr/sbin/ifconfig | tr -d '\n' |sed "s/.*inet addr:$PELICAN_NETWORK.\([^ ]*\) .*/\1/")
 	NODEHOSTNAME="pel$HOST"
 	#  sed "s/pelican/$NODEHOSTNAME/g" /etc/hostname > /etc/hostname.tmp
 	#  mv /etc/hostname.tmp /etc/hostname
 	# Need to change in /etc/hosts or odd errors show up about host resolution.
-	NODEIP=$(/sbin/ifconfig | sed -n '/inet addr:/s/ *inet addr:\([[:digit:].]*\) .*/\1/p' | grep -v "127.0.0.1")
+	NODEIP=$(/usr/sbin/ifconfig | sed -n '/inet addr:/s/ *inet addr:\([[:digit:].]*\) .*/\1/p' | grep -v "127.0.0.1")
 cat >> /etc/hosts.tmp <<!HOSTS_NODE_PREAMBLE!
 127.0.0.1	localhost
 $NODEIP	$NODEHOSTNAME
@@ -203,7 +203,7 @@ else
 			shutdown -h now
 		fi
 	fi
-	myip=(`/sbin/ifconfig | grep -i "Ethernet" -A 1|grep "inet addr"|cut -d  " " -f 12|cut -d ":" -f 2`)
+	myip=$(`/usr/sbin/ifconfig | grep -i "Ethernet" -A 1|grep "inet addr"|cut -d  " " -f 12|cut -d ":" -f 2`)
 	echo "$myip is up" > /home/user/tmp/$myip
 	# petry: Check for a device with the label "PELSCRATCH" and mount it at
 	# /usr/local/scratch . While /home is exported to all the nodes, it could

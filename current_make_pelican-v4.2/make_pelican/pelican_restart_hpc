@@ -22,7 +22,7 @@ fi
 FRONTENDIP="$PELICAN_NETWORK.1"
 # get cluster ethernet device. Need to escape periods for sed
 FRONTENDIP_FOR_SED=$(echo "$FRONTENDIP" | sed 's/\./\\\./g')
-CLUSTER_DEV=$(/sbin/ifconfig -a | tr -d '\n' | sed "s/.*\(eth[^ ]*\).*$FRONTENDIP_FOR_SED.*/\1/")
+CLUSTER_DEV=$(/usr/sbin/ifconfig -a | tr -d '\n' | sed "s/.*\(eth[^ ]*\).*$FRONTENDIP_FOR_SED.*/\1/")
 bailout(){
 	# petry : remove flag indicating we are running this script
 	rm -f /home/user/.running_pelican_restart_hpc

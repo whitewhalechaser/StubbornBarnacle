@@ -51,7 +51,7 @@ BC="$PELICAN_NETWORK.255"
 if [ ! -z "$CLUSTER_NETWORK" ]; then
 	if ! echo $CLUSTER_NETWORK | grep -q "eth" ; then
 		MAC_ADDRESS=$CLUSTER_NETWORK
-		CLUSTER_NETWORK=$(/sbin/ifconfig -a | grep "$MAC_ADDRESS" | cut -f 1 --delimiter=" ")
+		CLUSTER_NETWORK=$(/usr/sbin/ifconfig -a | grep "$MAC_ADDRESS" | cut -f 1 --delimiter=" ")
 		if [ -z "$CLUSTER_NETWORK" ]; then
 			echo "CLUSTER_NETWORK variable $MAC_ADDRESS is not a valid device or MAC address."
 			bailout
@@ -62,7 +62,7 @@ fi
 # fixing problem>ifdown: interface xxxx not configured< when trying to discounnect network device
 nmcli d disconnect $DV >/dev/null 2>&1
 sleep 4
-CMD="ifconfig $DV $IP netmask $NM broadcast $BC up"
+CMD="/usr/sbin/ifconfig $DV $IP netmask $NM broadcast $BC up"
 $CMD
 sleep 4
 # petry: configure firewall
