@@ -36,7 +36,7 @@ update-rc.d gdm disable
 update-rc.d gdm3 disable
 update-rc.d xdm disable
 
-update-flashplugin-nonfree --install
+#update-flashplugin-nonfree --install
 
 mv /etc/skel/gmetad.conf /etc/ganglia/
 mv /etc/skel/gmond.conf.pelicanmaster /etc/ganglia/

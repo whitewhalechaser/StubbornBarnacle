@@ -29,7 +29,7 @@ dynare dynare-doc
 gretl gretl-data gretl-doc gretl-common
 # ganglia, firewall
 ganglia-monitor gmetad libganglia1 ganglia-webfrontend
-librrds-perl librrd2-dev firefox-esr
+librrds-perl firefox-esr
 apache2 php7.4 rrdtool php7.4-gd
 # Python
 python-matplotlib-data 
@@ -39,7 +39,7 @@ ipython3 python-gmpy2-common
 # previously included, but don't seem to be available from the Debian 
 # repositories, at least without some more troubleshooting.
 # virtualbox rar unrar octave-info python-scipy python-numpy
-# python-mpmath python-mpi4py qtiplot 
+# python-mpmath python-mpi4py qtiplot librrd2-dev 
 
 # Fixing warning:
 #The XKEYBOARD keymap compiler (xkbcomp) reports:
