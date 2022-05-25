@@ -13,10 +13,10 @@ case "$(dpkg --print-architecture)" in
 esac
 
 #Use your preferred mirrors
-mirror="ftp://ftp.uk.debian.org/debian/"
+mirror="http://mirrors.wikimedia.org/debian/"
 mirror_security="http://security.debian.org/"
-mirror_updates="ftp://ftp.uk.debian.org/debian/"
-mirror_backports="ftp://ftp.uk.debian.org/debian/"
+mirror_updates="http://mirrors.wikimedia.org/debian/"
+mirror_backports="http://mirrors.wikimedia.org/debian/"
 
 #Customizing locale and language (Valid options for these can be found in /usr/share/X11/xkb/rules/base.lst)
 pel_locales="en_US.UTF-8"
@@ -48,7 +48,7 @@ lb config noauto \\
 	--iso-volume="PelicanHPC" \\
 	--bootappend-live="noautologin noxautologin hostname=pelican boot=live noeject config quiet splash 3 locales=${pel_locales} keyboard-layouts=${pel_keyboard_layouts}" \\
 	--cache-packages="true" \\
-	--distribution="jessie" \\
+	--distribution="bullseye" \\
 	--cache-stages="bootstrap" \\
 	--updates="true" \\
 	--security="true" \\
