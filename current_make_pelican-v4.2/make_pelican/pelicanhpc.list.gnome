@@ -1,0 +1,47 @@
+#!/bin/sh
+#### packages to include on image - place names of packages you want here ####
+rm -f *~
+cat <<PACKAGELIST > pelicanhpc.list
+# X stuff: task-xfce-desktop, task-gnome-desktop
+task-gnome-desktop
+# keyboard layout in tty
+console-data console-setup console-common
+# basic stuff needed for cluster setup
+dnsmasq nfs-kernel-server nfs-common
+tftpd-hpa xinetd ssh
+# oof2 dependency
+#python-gtk2-dev libgnomecanvas2-dev libmagick++-dev
+#liblapack-dev bison
+# configuration and tools
+virtualbox dialog rsync fping geeqie pssh lm-sensors
+xsensors gnuplot qtiplot xpdf csh tcsh ksh bc rar unrar
+gparted zip unzip dsh debootstrap syslinux pxelinux live-build
+# WOL
+etherwake beep
+debconf-utils arno-iptables-firewall
+# octave
+octave octave-info octave-doc 
+# openmpi
+libopenmpi-dev openmpi-bin openmpi-doc
+# dynare
+dynare dynare-doc
+# gretl
+gretl gretl-data gretl-doc gretl-common
+# ganglia, firewall
+ganglia-monitor gmetad libganglia1 ganglia-webfrontend
+librrds-perl librrd2-dev firefox-esr
+apache2 php5 rrdtool php5-gd
+# Python
+python-scipy python-matplotlib python-numpy
+ipython python-mpmath python-gmpy python-mpi4py
+# Fixing warning:
+#The XKEYBOARD keymap compiler (xkbcomp) reports:
+#> Warning:          Compat map for group 2 redefined
+#>                   Using new definition
+#> Warning:          Compat map for group 3 redefined
+#>                   Using new definition
+#> Warning:          Compat map for group 4 redefined
+#>                   Using new definition
+#Errors from xkbcomp are not fatal to the X server
+xserver-xorg-input-kbd
+PACKAGELIST

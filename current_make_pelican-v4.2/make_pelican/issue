@@ -1,0 +1,12 @@
+
+[H[J
+[1;32mWelcome to [1;36mPelicanHPC[1;32m!
+
+To log in, enter [1;33muser[1;32m as the username, and [1;33mPelicanHPC[1;32m as the password.
+After you\'re logged in, you can:
+
+[1;34m* create a cluster: type [1;33mpelican_setup[1;32m
+[1;34m* enter a desktop environment: type [1;33mstartx[1;32m
+
+For more information, visit http://PelicanHPC.org. Have fun![0;39m
+

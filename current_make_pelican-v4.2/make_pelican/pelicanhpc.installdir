@@ -1,0 +1,5 @@
+#!/bin/sh
+install -d pelicanhome
+install -d packages
+rm -f *~
+cp -rf make_pelican* pelicanhome/

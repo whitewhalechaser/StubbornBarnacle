@@ -1,0 +1,5 @@
+#!/bin/bash	
+pelican_setup_user
+pelican_setup_netdevice
+pelican_terminalserver
+pelican_restart_hpc

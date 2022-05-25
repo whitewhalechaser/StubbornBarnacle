@@ -1,0 +1,57 @@
+#!/bin/sh
+if [ ! -e "$THISDIR/splash.png" ]; then
+  wget http://pelicanhpc.org/download/splash.png
+fi
+# ISOLINUX SPLASH SCREEN & TIMEOUT
+install -d config/includes.binary/isolinux/
+cp "$THISDIR"/splash.png config/includes.binary/isolinux/splash.png
+cat <<ISOLINUXCFG > config/includes.binary/isolinux/isolinux.cfg
+include menu.cfg
+default vesamenu.c32
+prompt 0
+timeout 150
+ISOLINUXCFG
+#cat <<ADVANCEDCFG > config/includes.binary/isolinux/advanced.cfg
+#label hdt
+#	menu label ^Hardware Detection Tool (HDT)
+#	com32 hdt.c32
+#
+#label memtest
+#	menu label ^Memory Diagnostic Tool (memtest86+)
+#	linux /live/memtest
+#ADVANCEDCFG
+cat <<MENUCFG > config/includes.binary/isolinux/menu.cfg
+menu hshift 7
+menu width 60
+
+menu title Boot menu
+include stdmenu.cfg
+include live.cfg
+menu begin advanced
+	menu title ^Advanced options
+	include stdmenu.cfg
+	label mainmenu
+		menu label ^Back..
+		menu exit
+	include advanced.cfg
+menu end
+
+menu clear
+MENUCFG
+cat <<STDMENUCFG > config/includes.binary/isolinux/stdmenu.cfg
+menu background splash.png
+menu color title	* #FFFFFFFF *
+menu color border	* #00000000 #00000000 none
+menu color sel		* #ffffffff #76a1d0ff *
+menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *
+menu color tabmsg	* #ffffffff #00000000 *
+menu color help		37;40 #ffdddd00 #00000000 none
+menu vshift 16
+menu rows 7
+menu helpmsgrow 15
+# The command line must be at least one line from the bottom.
+menu cmdlinerow 8
+menu timeoutrow 8
+menu tabmsgrow 10
+menu tabmsg Press ENTER to boot or TAB to edit a menu entry
+STDMENUCFG

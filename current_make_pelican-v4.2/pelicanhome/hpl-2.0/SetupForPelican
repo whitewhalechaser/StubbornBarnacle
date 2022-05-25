@@ -1,0 +1,3 @@
+make clean_arch_all arch=Pelican
+make arch=Pelican
+cp Pelican.dat ./bin/Pelican/HPL.dat

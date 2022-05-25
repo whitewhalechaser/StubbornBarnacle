@@ -1,0 +1,6 @@
+#!/bin/sh
+cat <<RC_LOCAL > /etc/rc.local
+#! /bin/sh
+pelican_boot_setup
+RC_LOCAL
+chmod a+x /etc/rc.local

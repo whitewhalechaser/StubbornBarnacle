@@ -1,0 +1,217 @@
+#!/bin/sh
+# petry: script needs to run as user 'user' for ssh to nodes to work.
+if [ ! "$(whoami)" = 'user' ]; then
+	su user -c "pelican_restart_hpc"
+	exit 0
+fi 
+PKTMP="/home/user/tmp"
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+export PATH
+DIALOG="dialog"
+# petry : set flag indicating we're running this script (used by
+#         SHUTDOWN_IF_NOT_SETUP config variable)
+touch /home/user/.running_pelican_restart_hpc
+# petry : default variable values
+PELICAN_NETWORK="10.11.12"
+GANGLIA_PROMPT="NO"
+GANGLIA="YES"
+# petry : load configuration file (override default values potentially)
+if [ -e /home/user/pelican_config ]; then
+	. /home/user/pelican_config
+fi
+FRONTENDIP="$PELICAN_NETWORK.1"
+# get cluster ethernet device. Need to escape periods for sed
+FRONTENDIP_FOR_SED=$(echo "$FRONTENDIP" | sed 's/\./\\\./g')
+CLUSTER_DEV=$(/sbin/ifconfig -a | tr -d '\n' | sed "s/.*\(eth[^ ]*\).*$FRONTENDIP_FOR_SED.*/\1/")
+bailout(){
+	# petry : remove flag indicating we are running this script
+	rm -f /home/user/.running_pelican_restart_hpc
+	exit 0
+}
+# check which nodes are up
+checknodes(){
+	rm -f $PKTMP/bhosts
+	sudo fping -a -q -r0 -f /home/user/fpinghosts > $PKTMP/bhosts 2>/dev/null
+}
+retry(){
+	checknodes
+	NNODES="$(grep -c "" $PKTMP/bhosts)"
+	MESSAGENODES="\nGo turn on your compute nodes now. \n\nAt the moment $NNODES compute nodes (not counting this frontend node) are available. \n\nClick no to rescan the available nodes. Click yes when the desired number of nodes are available. You might want to wait a bit if some nodes are still finishing booting up."
+	$DIALOG --title "$TITLE" --defaultno --yesno "$MESSAGENODES" 20 50 || retry
+}
+trap bailout 1 2 3 15
+# petry: override restarting MPI warning if configured in config file
+if [ ! "$MPI_WARNING_PROMPT" = "NO" ]; then
+	TITLE="Restart Pelican HPC"
+	MESSAGE="\nTime to bring the compute nodes into the cluster. If you are resizing a running cluster, be aware that continuing will interrupt any running MPI jobs. Continue?"
+	$DIALOG --title "$TITLE" --yesno "$MESSAGE" 15 90 || bailout
+fi
+# petry: Send WOL signals to nodes if configured in pelican config file.
+if [ "$WOL_NODES" = "YES" ]; then
+	if [ ! "$WOL_PROMPT" = "NO" ]; then
+		TITLE="Restart Pelican HPC"
+		MESSAGE="\nComputers for your cluster that have been configured in your pelican config file may be sent signals over the local area network to start them. Do you want to send wake-on-lan signals to machines configured in your pelican config file?"
+		if $DIALOG --title "$TITLE" --yesno "$MESSAGE" 15 90 ; then
+			WOL="YES"
+		else
+			WOL="NO"
+		fi
+	else
+		WOL="YES"
+	fi
+	if [ "$WOL" = "YES" ]; then
+		/usr/bin/pelican_nodes start
+	fi
+fi
+# petry: Only prompt to turn on nodes if not overridden in config file
+if [ ! "$DETECT_NODES_PROMPT" = "NO" ]; then
+	retry
+else
+	checknodes
+fi
+# master must be last in the list
+# petry: allow override in config file whether to include frontend
+if [ ! "$FRONTEND_IN_MPI" = "NO" ]; then
+	echo "$FRONTENDIP" | cat >> $PKTMP/bhosts
+fi
+#
+# Configure /etc/hosts on frontend for proper dns behaviour.
+HOSTIPS=$(cat $PKTMP/bhosts | tr "\n" " ")
+cat >> /tmp/hosts$$ <<!HOSTS_PREAMBLE!
+127.0.0.1	localhost
+$FRONTENDIP	pel1
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+!HOSTS_PREAMBLE!
+for HOSTIP in $HOSTIPS; do
+	if [ ! $HOSTIP = $FRONTENDIP ]; then
+		HOST=$(echo $HOSTIP | sed 's/[^\.]*.[^\.]*.[^\.]*.\([0-9]*\)/\1/')
+		NODEHOSTNAME="pel$HOST"
+		echo "$HOSTIP $NODEHOSTNAME" >> /tmp/hosts$$ 
+	fi
+done
+sudo mv /tmp/hosts$$ /etc/hosts
+# Now refresh dnsmasq
+sudo killall -HUP dnsmasq
+#
+# petry: add slots information to bhosts
+TMPBHOSTS="/tmp/bhosts$$"
+for HOSTIP in $HOSTIPS; do
+	SLOTS=$NUM_SLOTS
+	ETHERS_ENTRY=$(grep -s $HOSTIP /etc/ethers)
+	if  [ ! -z "$ETHERS_ENTRY" ]; then
+		MAC=$(echo "$ETHERS_ENTRY" | cut --delimiter=" " -f 1)
+		NODE_INFO_SLOTS=$(echo "$NODE_INFO" | grep -o "$MAC[^ ]*" | grep 's' | sed 's/[^s]*s0*\([0-9]*\).*/\1/') 
+		if [ ! -z "$NODE_INFO_SLOTS" ]; then
+			SLOTS="$NODE_INFO_SLOTS"
+		fi
+	fi
+	if [ -z "$SLOTS" ]; then
+		echo "$HOSTIP" >> /tmp/bhosts$$
+	elif [ "$SLOTS" = "0" ]; then
+		# no entry so do nothing
+		true
+	else
+		echo "$HOSTIP slots=$SLOTS" >> /tmp/bhosts$$
+	fi
+done
+mv /tmp/bhosts$$ $PKTMP/bhosts
+
+# petry: start ganglia, prompt if requested in config file.
+if [ "$GANGLIA_PROMPT" = "YES" ]; then
+	STARTGANGLIA="NO"
+	TITLE="Restart Pelican HPC"
+	MESSAGE="\nThe ganglia cluster monitoring software starts a web server on the frontend which you can point your browser at either locally (localhost) or remotely to monitor your cluster.  Do you want to start ganglia (enable the necessary daemons on the frontend and nodes)?"
+	if $DIALOG --title "$TITLE" --yesno "$MESSAGE" 15 90 ; then
+		STARTGANGLIA="YES"
+	fi
+elif [ "$GANGLIA" = "YES" ]; then
+	STARTGANGLIA="YES"
+else
+	STARTGANGLIA="NO"
+fi
+if [ "$STARTGANGLIA" = "YES" ]; then
+	# fixing the warning>Restarting web server: apache2apache2: Could not reliably determine the server's fully qualified domain name, using 10.11.12.1 for ServerName< in restarting apache2 service (/etc/init.d/apache2 {stop|start|restart|...)
+	if ! grep -qF "ServerName pel1" /etc/apache2/apache2.conf
+	then
+		sudo echo "ServerName pel1" | sudo tee -a /etc/apache2/apache2.conf
+	fi
+	# petry: We have to configure the ganglia webfrontend, ganglia-monitor and
+	# gmetad on the frontend, and ganglia-monitor on all the nodes.
+	# stop all local daemons
+	sudo systemctl stop apache2
+	sudo systemctl stop ganglia-monitor
+	sudo systemctl stop gmetad
+	# setup webfrontend and apache
+	sudo cp /etc/ganglia-webfrontend/apache.conf /etc/apache2/sites-enabled/ganglia.conf
+	sudo cp /etc/ganglia/gmond.conf.pelicanmaster /etc/ganglia/gmond.conf
+	# setup ssh environment
+	sudo bash -c 'echo PATH=$PATH >> /etc/environment'
+	sudo bash -c 'echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> /etc/environment'
+	# restart frontend services
+	sudo systemctl start ganglia-monitor
+	sudo systemctl start gmetad
+	sudo systemctl start apache2
+	# configure node gmond.conf file in nodes.
+	for HOSTIP in $HOSTIPS; do
+		if [ ! "$HOSTIP" = "$FRONTENDIP" ]; then
+			ssh "$HOSTIP" sudo systemctl stop ganglia-monitor
+			ssh "$HOSTIP" sudo cp /etc/ganglia/gmond.conf.pelicannode /etc/ganglia/gmond.conf
+			ssh "$HOSTIP" sudo systemctl start ganglia-monitor
+			ssh "$HOSTIP" sudo systemctl start gmetad
+			# setup ssh environment in nodes
+			ssh -t "$HOSTIP" "sudo bash -c 'echo PATH=$PATH >> /etc/environment'"
+			ssh -t "$HOSTIP" "sudo bash -c 'echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> /etc/environment'"
+		fi
+	done
+fi
+# ganglia code finished.
+# display success message
+NNODES="$(grep -c "" $PKTMP/bhosts)"
+# final report
+# petry: override final report if configured in config file
+if [ ! "$FINAL_REPORT_PROMPT" = "NO" ]; then
+	if [ ! "$FLOPS_TEST" = "NO" ]; then
+		SUCCESS="\nYour cluster of $NNODES nodes is (probably) ready to use, a rudimentary test of the cluster will follow. If there was a problem, just re-run the script.\nThe nodes in the cluster are listed in the file ~/tmp/bhosts. If you add or remove compute nodes, re-run this script (pelican_restart_hpc) whenever you like."
+	else 
+		SUCCESS="\nYour cluster of $NNODES nodes is (probably) ready to use.  The nodes in the cluster are listed in the file ~/tmp/bhosts. If you add or remove compute nodes, re-run this script (pelican_restart_hpc) whenever you like."
+	fi
+	$DIALOG --title "$TITLE" --msgbox "$SUCCESS" 15 50
+fi
+echo -n "[H[J"
+# flops.f simple test of cluster
+if [ ! "$FLOPS_TEST" = "NO" ]; then
+	if [ -e /home/user/flops.f ]; then
+		cd /home/user
+		mpif77 -o flops flops.f
+		# petry: removed -np $NNODES from the following - it will use one slot
+		# per host if slots are not defined anyway, and it will use the number of
+		# slots found if they are defined which is desirable.
+		nbc=0
+		while read ip
+		do
+			echo $ip
+			host=$(echo $ip | cut -d"." -f4)
+			host="pel"$host
+			nbci=$(ssh -n $host sudo dmidecode --type processor | grep "Core Count" | cut -d: -f2)
+			if echo $nbci | egrep -q '^[0-9]+$'; then
+				nbc=$(($nbc+$nbci))
+			else
+				nbc=$(($nbc+1))
+			fi
+		done </home/user/tmp/bhosts
+		mpirun --hostfile /home/user/tmp/bhosts -np $nbc /home/user/flops
+	fi
+fi
+# petry: add option for final local script
+if [ "$RUN_FRONTEND_LOCAL" = "YES" ]; then
+	if [ -e /home/user/pelican_frontend_local ]; then
+		/home/user/pelican_frontend_local
+	fi
+fi
+bailout

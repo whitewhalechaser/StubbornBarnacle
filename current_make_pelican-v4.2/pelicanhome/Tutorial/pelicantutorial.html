@@ -1,0 +1,450 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>PelicanHPC Tutorial</TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Linux)">
+	<META NAME="AUTHOR" CONTENT="Michael Creel">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Debian user">
+	<META NAME="CHANGED" CONTENT="20150216;21142200">
+	<META NAME="DESCRIPTION" CONTENT="shows how to use PelicanHPC to set up a cluster">
+	<META NAME="CHANGEDBY" CONTENT="Debian user">
+	<META NAME="CHANGEDBY" CONTENT="Debian user">
+	<META NAME="CHANGEDBY" CONTENT="Debian user">
+	<META NAME="CHANGEDBY" CONTENT="Debian user">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { size: 8.5in 11in }
+		H2.western { font-family: "Albany", sans-serif; font-size: 14pt; font-style: italic }
+		H2.cjk { font-family: "HG Mincho Light J"; font-size: 14pt; font-style: italic }
+		H2.ctl { font-family: "Arial Unicode MS"; font-size: 14pt; font-style: italic }
+		H3.western { font-family: "Albany", sans-serif }
+		H3.cjk { font-family: "HG Mincho Light J" }
+		H3.ctl { font-family: "Arial Unicode MS" }
+		H4.western { font-family: "Albany", sans-serif; font-size: 11pt; font-style: italic }
+		H4.cjk { font-family: "HG Mincho Light J"; font-size: 11pt; font-style: italic }
+		H4.ctl { font-family: "Arial Unicode MS"; font-size: 11pt; font-style: italic }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<H1>PelicanHPC Tutorial</H1>
+<P>September 2011<BR><A HREF="http://pareto.uab.es/mcreel/">Michael
+Creel</A><BR>Universitat Autònoma de Barcelona</P>
+<P>February 2015<BR>Aissam Hidoussi<BR>University Hadj Lakhdar
+Batna<BR><BR>You can check for more recent versions of this document
+at <A HREF="http://www.pelicanhpc.org/tutorial/pelicantutorial.html">http://www.pelicanhpc.org/tutorial/pelicantutorial.html</A></P>
+<H2 CLASS="western"><A NAME="Contents"></A>Contents</H2>
+<OL>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="#Introduction">Introduction</A>
+		</P>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="#Put PelicanHPC onto USB flash or burn it to CD !">Put
+	PelicanHPC onto USB flash or burn it to CD !</A> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="#Initial setup">Initial
+	setup</A> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="#Saving_your_work">Saving
+	your work</A></P>
+	<LI><P><A HREF="#make_pelican">Using the make_pelican script</A> 
+	</P>
+</OL>
+<H2 CLASS="western"><A NAME="Introduction"></A>Introduction</H2>
+<P STYLE="margin-bottom: 0in"><A HREF="http://www.pelicanhpc.org/">PelicanHPC</A>
+is a rapid (~5 minutes, when you know what you're doing) means of
+setting up a &quot;high performance computing&quot; (HPC) cluster for
+parallel computing using MPI. This tutorial gives a basic description
+of what PelicanHPC does, addresses how to use the released CD images
+to set up a HPC cluster, and gives some basic examples of usage.</P>
+<P>Note: This tutorial uses the term &quot;USB/USB flash&quot;
+alongside USB stick, USB drive, USB device, USB pendrive and thumb
+drive.</P>
+<H3 CLASS="western">Description of PelicanHPC</H3>
+<P>PelicanHPC is a distribution of GNU/Linux that runs as a &quot;live
+CD&quot; or bootable USB image&nbsp; (it can also be booted from a
+hard disk partition, or it can be used as a virtualized OS). If the
+ISO image file is put on a CD or USB, it can then be used to boot a
+computer. The computer on which PelicanHPC is booted is referred to
+as the &quot;frontend node&quot;. It is the computer with which the
+user interacts. Once PelicanHPC is running, a script -&nbsp;
+&quot;pelican_setup&quot; - may be run. This script configures the
+frontend node as a netboot server. After this has been done, other
+computers can boot copies of PelicanHPC over the network. These other
+computers are referred to as &quot;compute nodes&quot;. PelicanHPC
+configures the cluster made up of the frontend node and the compute
+nodes so that MPI-based parallel computing may be done.<BR><BR>A
+&quot;live CD&quot; such as PelicanHPC by default does not use the
+hard disks of any of the nodes (except Linux swap space, if it
+exists), so it will not destroy or alter your installed operating
+system. When the PelicanHPC cluster is shut down, all of the
+computers are in their original state, and will boot back into
+whatever operating systems are installed on them. PelicanHPC <I>can</I>
+optionally be made to use hard disk storage, so that its state can be
+preserved across boots. It can be configured to boot without user
+intervention, with access possible by ssh. There is also the
+possibility of making the compute nodes boot using wake-on-LAN. With
+these more advanced optional features, PelicanHPC can be used to run
+a headless permanent cluster.<BR><BR>PelicanHPC is made using <A HREF="http://www.debian.org/">Debian
+GNU/Linux</A> as its base, through the <A HREF="http://live.debian.net/">Debian
+Live</A> system. It is made by running a single script using the
+command &quot;<FONT FACE="monospace">sh make_pelican-v*</FONT>&quot;.
+Customized versions of PelicanHPC, for example, containing additional
+packages, can easily be made by modifying the make_pelican script.
+The make_pelican script and the needed packages are provided on
+PelicanHPC, so you can build a custom image using the provided
+images. You can also run make_pelican from any GNU/Linux distro if
+you install live-build and a few other packages.</P>
+<H4 CLASS="western">Features</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">The frontend node can be a real
+	computer booted using a CD or a USB device, or a virtual machine
+	that is booted using the CD image file. With this last option,
+	PelicanHPC can be used at the same time as the normal work
+	environment, which may be any of the common operating systems. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">The compute nodes are normally
+	real computers, for maximum performance, but they can also be
+	virtual. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Supports MPI-based parallel
+	computing using Fortran (77, 90), C, C++, GNU Octave and Python. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Offers the <A HREF="http://www.open-mpi.org/">Open
+	MPI</A> implementation of MPI. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Cluster can be resized to add or
+	remove nodes using the &quot;pelican_restarthpc&quot; command. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Easily extensible to add packages.
+	Also easily modifiable, since the PelicanHPC CD/USB image is created
+	using a single script that relies on the <A HREF="http://debian-live.alioth.debian.org/">Debian
+	Live</A> system. For this reason, the distributed version is fairly
+	basic and lightweight. 
+	</P>
+	<LI><P>Contains example software: <A HREF="http://top500.org/project/linpack">Linpack
+	HPL</A> (now at v2.1) benchmark. Also has <A HREF="http://mpi4py.scipy.org/">mpi4py</A>.</P>
+</UL>
+<H4 CLASS="western">Limitations and requirements</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">The compute nodes must be booted
+	over the network. This is an option offered by&nbsp; all modern
+	networking devices supplied with motherboards, but it often must be
+	enabled in the BIOS setup. Enable it, and give it higher priority
+	that booting from hard disk or other sources. If you have a network
+	card that won't do netboot, it is possible to work around this using
+	<A HREF="http://www.rom-o-matic.net/">rom-o-matic</A>. Another thing
+	to be aware of is that the PelicanHPC frontend operates as a dhcp
+	server. You should not use it on an open network, or you will cause
+	dhcp conflicts. This will get you into a world of trouble with the
+	network administrators. Plus, your compute nodes will not boot
+	properly.</P>
+	<LI><P STYLE="margin-bottom: 0in">A PelicanHPC cluster is designed
+	to be used by a single person - there is only one user, with the
+	username &quot;user&quot;. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Released versions are for 64 bit
+	CPUs only (Opteron, Turion, Core 2, etc.). make_pelican can easily
+	be used to make a 32 bit version, if needed. 
+	</P>
+	<LI><P>The PelicanHPC web page lists some other similar distros that
+	may be more appropriate for certain uses.</P>
+</UL>
+<H4 CLASS="western">Licensing and Disclaimer</H4>
+<P>PelicanHPC is a CD image made by running a script (see below). The
+script is licensed GPL v3. The resulting CD image contains software
+from the <A HREF="http://www.debian.org/">Debian</A> distribution of
+GNU/Linux, and several other sources, which is subject to the
+licenses chosen by the authors of that software.<BR><BR>This released
+PelicanHPC CD images are distributed in the hope that they will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+</P>
+<H2 CLASS="western"><A NAME="Put PelicanHPC onto USB flash or burn it to CD !"></A>
+Put PelicanHPC onto USB flash or burn it to CD !</H2>
+<P>The most common USB ports and USB flash drives work according to
+the USB 2 standard. Booting from USB 2 from a live drive is faster
+than from a corresponding CD/DVD disk. Standard USB 2 flash drives
+have rather slow flash hardware, with read and write speed much
+slower than the transfer speed of USB 2, so it is worth checking if
+the speed is specified.</P>
+<P>USB 1.1 is also possible to use, but it is very slow, slower than
+a corresponding CD/DVD disk.</P>
+<P>Hardware according to the USB 3 standard is much faster than USB
+2. So if you have a USB 3 port and a USB 3 flash drive, booting and
+running will be as fast as from an internal drive (SATA or IDE) or an
+external eSATA drive. And a USB 3 flash drive has much faster flash
+hardware, and it is usually specified. The market changes quickly, so
+it is worth checking on the internet, which brand and model to select
+to get the best buy 'today'.</P>
+<P>USB 3 flash drives are much faster than USB 2 flash drives also in
+USB 2 ports, because the flash hardware is not limiting the transfer
+speed. For the same reason a USB connected HDD is also much faster
+than a USB 2 flash drive.</P>
+<P>It is preferable to use USB 2 or higher. However, if you choose to
+use a DVD, burn the downloaded PelicanHPC iso using your favored
+software, else if you choose to use a USB flash, follow these steps:</P>
+<P>1) Backup your data from USB flash (all data will be lost).</P>
+<P STYLE="margin-bottom: 0in">2) Find the device name of USB drive;
+before connecting the USB flash, run the command &quot;ls /dev/sd*&quot;
+in a terminal, then connect the USB flash and repeat the command &quot;ls
+/dev/sd*&quot;, your USB flash is the new name which appear in the
+second command.</P>
+<P STYLE="margin-bottom: 0in">Exemple from my computer:</P>
+<P STYLE="margin-bottom: 0in">a) Before connecting the USB flash:</P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">user@lep1:~$ ls
+/dev/sd*</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">/dev/sda
+/dev/sda2 /dev/sda4 /dev/sda6 /dev/sdb</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">/dev/sda1
+/dev/sda3 /dev/sda5 /dev/sda7 /dev/sdb1</FONT></P>
+<P STYLE="margin-bottom: 0in">b) After connecting the USB flash:</P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">user@lep1:~$ ls
+/dev/sd*</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">/dev/sda
+/dev/sda2 /dev/sda4 /dev/sda6 /dev/sdb /dev/sdc</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">/dev/sda1
+/dev/sda3 /dev/sda5 /dev/sda7 /dev/sdb1 /dev/sdc1</FONT></P>
+<P STYLE="margin-bottom: 0.2in">So, the new items are (/dev/sdc and
+/dev/sdc1), sdc1 is a partition, sdc is the name of USB drive
+(partitions are named by adding a number to the device name: sdc1
+first partition, sdc2 second partition, …).</P>
+<P STYLE="margin-bottom: 0in">3) Put PelicanHPC iso onto USB flash
+using the following commands with root permissions:</P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">sudo cp
+path_to_pelicanhpc_iso/pelicanhpc-v3.1-xfce.iso /dev/sdc</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#0000ff">sudo sync</FONT></P>
+<H2 CLASS="western"><A NAME="Initial setup"></A>Initial setup</H2>
+<P STYLE="margin-bottom: 0in">The two main commands for
+administration of the cluster are &quot;pelican_setup&quot;, to
+configure the frontend as a server, NFS export /home, etc., and
+&quot;pelican_restarthpc&quot;, which is used to add/remove nodes
+after the initial setup. The rest of this explains how this
+works.<BR><BR>The frontend and all compute nodes must be networked
+together. IMPORTANT: the frontend node will act as a DHCP server, so
+be sure to isolate the network used for the cluster from other
+networks, to avoid conflicts with other DHCP servers. If you start
+handing out IP addresses to your co-workers' computers, they may
+become annoyed.&nbsp; If the frontend node has multiple network
+interfaces, you can use one to connect to the cluster and another to
+connect to the Internet.<BR><BR>Put the USB flash or DVD in the
+computer that will be the frontend, and turn it on. Make sure the
+BIOS setup lets you boot from USB flash or DVD. When you boot up,
+you'll see something like the following image:</P>
+<P><FONT COLOR="#000000"><FONT COLOR="#000000"><IMG SRC="1.png" NAME="graphics5" ALIGN=BOTTOM WIDTH=650 HEIGHT=559 BORDER=1></FONT></P>
+<P><FONT COLOR="#000000">N.B: PelicanHPC work on legacy mode (If the
+machine use UEFI mode, search Google for how to switch to Legacy mode
+in Bios).</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">Here, if you
+press &lt;Tab&gt;, you have the opportunity to enter options to set
+keyboard mappings, or special &quot;cheatcodes&quot; to make the CD
+boot on problematic hardware. For example, default locale and
+keyboard layout are en_US.UTF-8 and us, respectively, i can get a
+Spanish keyboard by pressing &lt;Tab&gt; and then using arrow keys on
+keyboard to move the cursor and change keyboard layout to “es”
+(Valid options for these can be found in <A HREF="./base.lst.pdf">base.lst.pdf</A>).
+Either explore the options by highlighting the Help line and pressing
+&lt;Enter&gt;, or edit options by pressing &lt;Tab&gt;, or just press
+&lt;Enter&gt; to boot up using default settings.</FONT></P>
+<P><FONT COLOR="#000000"><FONT COLOR="#000000"><IMG SRC="1.b.png" NAME="graphics1" ALIGN=BOTTOM WIDTH=650 HEIGHT=559 BORDER=1><BR><BR>Once
+you boot up, eventually you see:<BR><FONT COLOR="#000000"><IMG SRC="1.1.png" NAME="graphics2" ALIGN=BOTTOM WIDTH=720 HEIGHT=451 BORDER=1><BR></FONT><BR><BR>
+</P>
+<P><FONT COLOR="#000000">This screen gives you the opportunity to use
+a permanent storage device for the /home directory of the PelicanHPC
+user. By default, if you just press &lt;Enter&gt;, hard disks are not
+used, and PelicanHPC does not alter any of the computers used in the
+cluster. This is safe and easy, but it has the disadvantage that any
+work you do disappears when you shut down the cluster. To use
+permanent storage, you can type in the name of a device (hard disk
+partition, USB drive, etc.) that has a formatted ext2 or ext3
+partition, which will be mounted at /home. For example, you could
+replace &quot;ram1&quot; with &quot;sda2&quot;&nbsp; or &quot;hdb5&quot;
+(no quotes). If you do this, a directory &quot;user&quot; will be
+created at the root of the specified device, and will be used as the
+home directory of the cluster user (username &quot;user&quot;). If
+you shut down the cluster, the directory will not be removed, and it
+can be re-used when you restart PelicanHPC. If you have any doubts
+about this, just press &lt;Enter&gt;. For casual experimentation, you
+do not need this feature. This feature is provided as a convenience
+for advanced users. It is impossible to test this feature on all
+possible hardware configurations, so NO GUARANTEES ARE MADE THAT IT
+WILL NOT DESTROY YOUR HARD DISK. Back up your data before trying
+anything but the default.</FONT></P>
+<P><FONT COLOR="#000000">IMPORTANT NOTE: there is another way to use
+permanent storage that is quite flexible. This is documented in the
+file /home/user/pelican_config, which you can see if you boot using
+the default. If this is your first experience with PelicanHPC, I
+recommend doing a default boot, study pelican_config, and then choose
+the option for permanent storage that you find most
+appropriate.<BR><BR>Next, you will see<BR><FONT COLOR="#000000"><IMG SRC="1.2.png" NAME="graphics3" ALIGN=BOTTOM WIDTH=730 HEIGHT=479 BORDER=1></FONT></P>
+<P><FONT COLOR="#000000">You will probably want to choose &quot;yes&quot;,
+unless you are re-using work you saved in a previous session.<BR><BR>Next,
+you are prompted to change the default password:<BR><FONT COLOR="#000000"><IMG SRC="1.3.png" NAME="graphics4" ALIGN=BOTTOM WIDTH=730 HEIGHT=479 BORDER=1><BR></FONT><BR><BR>
+</P>
+<P><FONT COLOR="#000000">You should backspace to remove the default
+and then type in a new password. This will be the password for user
+&quot;user&quot; on the frontend node and on all of the compute
+nodes, too.</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">Finally, you are
+all booted up and the login prompt appears:<BR><IMG SRC="1.3.1.png" NAME="graphics20" ALIGN=BOTTOM WIDTH=730 HEIGHT=479 BORDER=0></FONT></P>
+<P STYLE="margin-bottom: 0.2in"><FONT COLOR="#000000">Enter the
+username &quot;user&quot; and then the password that you set a moment
+ago.</FONT></P>
+<P><FONT COLOR="#000000">Now you are logged in:<BR><IMG SRC="1.3.2.png" NAME="graphics21" ALIGN=BOTTOM WIDTH=730 HEIGHT=479 BORDER=0></FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">Note that you can
+enter the Xfce graphical enterface if you choose to by typing
+&quot;startx&quot;. By default, PelicanHPC uses the console, just to
+avoid possible problems with unusual graphics hardware.<BR><BR>To set
+up a cluster, type &quot;pelican_setup&quot;. You can do this from
+the console as in these instructions, or from Xfce by opening up a
+terminal. Next, we see the following, supposing that you have more
+than 1 network device:</FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000"><FONT COLOR="#000000"><IMG SRC="6.png" NAME="graphics7" ALIGN=BOTTOM WIDTH=720 HEIGHT=400 BORDER=1><BR><BR><BR>After
+you choose the net device, services need to be started. Please read
+the warning in the following screenshot. Setting up a PelicanHPC dhcp
+server will get you in trouble with your network administrators if
+you do this on an open network. You should make sure that the network
+device used for the cluster is isolated from all networks except the
+cluster. When you see the following screen, choose &quot;yes&quot;.<BR><FONT COLOR="#000000"><IMG SRC="1.4.png" NAME="graphics8" ALIGN=BOTTOM WIDTH=686 HEIGHT=513 BORDER=1><BR><BR><BR>Next
+you will see</FONT></P>
+<P><FONT COLOR="#000000"><FONT COLOR="#000000"><IMG SRC="1.5.png" NAME="graphics9" ALIGN=BOTTOM WIDTH=680 HEIGHT=505 BORDER=1><BR></FONT><BR><BR>
+</P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">Press enter, and
+go turn on the compute nodes.<BR><BR>When a compute node starts to
+netboot, you'll see this whiz by:<BR><FONT COLOR="#000000"><IMG SRC="9.png" NAME="graphics10" ALIGN=BOTTOM WIDTH=720 HEIGHT=400 BORDER=1><BR><BR><BR>When
+a compute node is done booting, you'll see this, supposing that it
+has a monitor:<BR><FONT COLOR="#000000"><IMG SRC="10.png" NAME="graphics11" ALIGN=BOTTOM WIDTH=720 HEIGHT=400 BORDER=1><BR><BR><BR>Back
+on the frontend node, you see the following:<BR><FONT COLOR="#000000"><IMG SRC="11.png" NAME="graphics12" ALIGN=BOTTOM WIDTH=640 HEIGHT=400 BORDER=1><BR><BR><BR>Once
+a node has booted up, the count goes up:<BR><FONT COLOR="#000000"><IMG SRC="12.png" NAME="graphics13" ALIGN=BOTTOM WIDTH=720 HEIGHT=400 BORDER=1><BR><BR>Keep
+hitting &quot;no&quot; until all of your compute nodes have booted
+up. Once you click yes, you'll see something like the following,
+depending on how many nodes you have.<BR><IMG SRC="13.png" NAME="graphics22" ALIGN=BOTTOM WIDTH=728 HEIGHT=472 BORDER=0></FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000"><BR>Finally, a
+quick test of the cluster is run. You should see something like the
+following:</FONT></P>
+<P><FONT COLOR="#000000"><IMG SRC="13.1.png" NAME="graphics23" ALIGN=BOTTOM WIDTH=728 HEIGHT=472 BORDER=0><BR></FONT><BR><BR>
+</P>
+<P><FONT COLOR="#000000">OK, that's it, the cluster is ready to use.
+Some other tips:</FONT></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">you can add
+	software to the frontend node using &quot;apt-get install whatever&quot;,
+	supposing that the frontend has a second net card that you have
+	configured to enable Internet access. This software is not available
+	on the compute nodes. To add software so that it is available to all
+	the nodes, it should be installed somewhere in /home/user.</FONT></P>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">the default
+	MPI setup is in the file /home/user/tmp/bhosts. This assigns ranks
+	to hosts in a round robin fashion. If your hosts have different
+	speeds, numbers of cores, etc., you should modify this file. If the
+	frontend node is virtual but the compute nodes are real, you should
+	probably remove the frontend node from the calculations.</FONT></P>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">if you need
+	other packages, then you can make your own version pretty easily
+	using the make_pelican script that is available on the PelicanHPC
+	homepage. This is explained (somewhat) below.</FONT></P>
+	<LI><P><FONT COLOR="#000000">You can resize the cluster (add or
+	remove compute nodes) whenever you like, by running
+	&quot;pelican_restarthpc&quot;.</FONT></P>
+</UL>
+<P><FONT COLOR="#000000"><B>IMPORTANT: </B>In the /home/user
+directory is the file pelican_config. This file contains switches for
+advanced options that allow features such as use of permanent
+storage, booting without user intervention, changing the network of
+the cluster, wake-on-LAN, etc. Casual users do not need to explore
+this, but people who want a permanent cluster should look at it. It
+is self-documented.</FONT></P>
+<P><A HREF="#Contents"><FONT COLOR="#000000">Return to contents</FONT></A></P>
+<H2 CLASS="western"><A NAME="Saving_your_work"></A><FONT COLOR="#000000">Saving
+your work</FONT></H2>
+<P><FONT COLOR="#000000">By default, PelicanHPC images put /home/user
+on a ramdisk which disappears when you shut down. You need to save
+your work between sessions, if you want to re-use it. There are many
+options, such as mounting a hard disk, using a USB device, etc. If
+you have an Internet connection configured, you can email it to
+yourself.<BR><BR>If you use PelicanHPC for serious work, it is very
+convenient to mount a storage device to use as /home, so that your
+work will be saved between sessions without taking any special steps.
+When you boot up the frontend node, you have the option to select a
+storage device to use. This is a feature for advanced users, and I
+strongly advise that you dedicate a hard disk partition for use with
+PelicanHPC. If you use a partition with other data on it, you should
+make sure to back it up before using it with PelicanHPC! Only ext2,
+ext3 and ext4 formats are known to work. This feature has been tested
+using a very limited set of hardware, so use it with caution. There
+is also the option to automatically mount a volume that has a special
+name. See pelican_config in /home/user. This is the best solution for
+users who want to use PelicanHPC on a long term basis.<BR><A HREF="#Contents"><BR>Return
+to contents</A></FONT></P>
+<H2 CLASS="western"><A NAME="make_pelican"></A><FONT COLOR="#000000">Using
+the make_pelican script</FONT></H2>
+<P><FONT COLOR="#000000">The distributed ISO images provide a bare
+bones cluster setup system, plus some packages that I use in my
+research and teaching. There are a few examples taken from my work,
+which may be of interest to those learning the basics of MPI, or to
+people interested in econometrics. However, many users will find that
+Pelican does not contain packages that they need. If one uses
+pelican_config properly, it is possible to give all nodes of the
+cluster internet access through the connection of the frontend node,
+so packages can be simply added using &quot;apt-get&quot;.
+Nevertheless, some users will prefer to have a custom version of&nbsp;
+the CD image. PelicanHPC is made by running a single script
+&quot;make_pelican&quot; (with a version number appended), which is
+available on the <A HREF="http://www.pelicanhpc.org/download.html">download
+page</A>, and also on the released images. If you have the
+prerequisites for running the script, it is very easy to make a
+customized version of Pelican. </FONT><FONT COLOR="#000000"><I>The
+prerequisites are installed on PelicanHPC, so you can build a custom
+version using the released version.</I></FONT><FONT COLOR="#000000">
+The prerequisites are:</FONT></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">an installed
+	version of GNU/Linux. This can be a minimal installation in a chroot
+	jail or a virtual machine running under Linux, Windows or MacOS. If
+	you use a virtual machine, make sure to allocate several GB of disk
+	space.</FONT></P>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">the
+	live-build package, version 3.x. Use the version available in Debian
+	Stable “sudo apt-get install live-build”. You also need the
+	debootstrap, wget and rsync packages. </FONT>
+	</P>
+</UL>
+<P><FONT COLOR="#000000"><BR>To use the script:</FONT></P>
+<OL>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">examine the
+	make_pelican script, which contains some self-explanatory comments.
+	Add the packages you need to the package list section. </FONT>
+	</P>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">there is a
+	part following the ##### pelicanhome #### comment where
+	pelicanhome-v3.1.tar.bz2 is downloaded. You can easily modify this
+	part to install your own custom content. See <A HREF="http://www.pelicanhpc.org/customization.html">Customization</A>
+	for examples of how to install non-Debian software.</FONT></P>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">you need to
+	run make_pelican as the root user (e.g. &quot;sudo sh
+	make-pelican&quot;). A fast internet connection is helpful, since a
+	lot of packages need to be downloaded. Also, it helps to build the
+	image on a fast, hopefully multicore computer. Parts of the build
+	process are parallelized and will take advantage of multiple cores.
+	Build time for the default configuration on a decent dual core
+	laptop with lot of RAM is less than half an hour. </FONT>
+	</P>
+	<LI><P STYLE="margin-bottom: 0in"><FONT COLOR="#000000">when you are
+	done, there will be a file &quot;pelicanhpc-custom.iso&quot; in the
+	directory from where you ran the script. </FONT>
+	</P>
+	<LI><P><FONT COLOR="#000000">There is a <A HREF="http://live.debian.net/manual/">manual
+	for Debian Live</A>. Please have a look at it before trying to use
+	make_pelican. Additional information is on the <A HREF="http://live.debian.net/">Debian
+	Live homepage</A>. This information is the main documentation, since
+	make_pelican is just a script that provides a specific configuration
+	to the Debian Live system of building a live CD image. Also remember
+	that &quot;man live-build&quot;,&nbsp; &quot;man lb_config&quot; and
+	&quot;man lb_build&quot; will give you information. </FONT>
+	</P>
+</OL>
+<P><A HREF="#Contents"><FONT COLOR="#000000">Return to contents</FONT></A></P>
+<P><FONT COLOR="#000000"><BR><BR></FONT><BR><BR>
+</P>
+</BODY>
+</HTML>

@@ -1,0 +1,76 @@
+#!/bin/sh
+################## OPTIONS FOR IMAGE  ################
+case "$(dpkg --print-architecture)" in
+	amd64)
+		_LINUX_FLAVOURS="amd64"
+		_SOURCE="false"
+		;;
+
+	i386)
+		_LINUX_FLAVOURS="486 686-pae"
+		_SOURCE="false"
+		;;
+esac
+
+#Use your preferred mirrors
+mirror="ftp://ftp.uk.debian.org/debian/"
+mirror_security="http://security.debian.org/"
+mirror_updates="ftp://ftp.uk.debian.org/debian/"
+mirror_backports="ftp://ftp.uk.debian.org/debian/"
+
+#Customizing locale and language (Valid options for these can be found in /usr/share/X11/xkb/rules/base.lst)
+pel_locales="en_US.UTF-8"
+pel_keyboard_layouts="us"
+
+mkdir -p auto
+cat <<CONFIG > auto/config
+#!/bin/sh
+
+set -e
+
+lb config noauto \\
+	--mode debian \\
+	--linux-flavours "${_LINUX_FLAVOURS}" \\
+	--source "${_SOURCE}" \\
+	--parent-mirror-bootstrap="${mirror}" \\
+	--parent-mirror-chroot-security="${mirror_security}" \\
+	--parent-mirror-binary="${mirror}" \\
+	--parent-mirror-binary-security="${mirror_security}" \\
+	--parent-mirror-debian-installer="${mirror}" \\
+	--mirror-bootstrap="${mirror}" \\
+	--mirror-chroot="${mirror}" \\
+	--mirror-chroot-security="${mirror_security}" \\
+	--mirror-binary="${mirror}" \\
+	--mirror-binary-security="${mirror_security}" \\
+	--mirror-debian-installer="${mirror}" \\
+	--archive-areas="main contrib non-free" \\
+	--iso-application="PelicanHPC" \\
+	--iso-volume="PelicanHPC" \\
+	--bootappend-live="noautologin noxautologin hostname=pelican boot=live noeject config quiet splash 3 locales=${pel_locales} keyboard-layouts=${pel_keyboard_layouts}" \\
+	--cache-packages="true" \\
+	--distribution="jessie" \\
+	--cache-stages="bootstrap" \\
+	--updates="true" \\
+	--security="true" \\
+	"\${@}"
+CONFIG
+
+cat <<CLEAN > auto/clean
+#!/bin/sh
+
+set -e
+
+lb clean noauto "${@}"
+
+rm -rf build.log config/ packages .build/ cache/bootstrap *~ */*~
+CLEAN
+
+cat <<BUILD > auto/build
+#!/bin/sh
+
+set -e
+
+lb build noauto "\${@}" 2>&1 | tee build.log
+BUILD
+
+chmod +x auto/*

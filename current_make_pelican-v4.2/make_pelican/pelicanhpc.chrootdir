@@ -1,0 +1,14 @@
+#!/bin/sh
+########## make directories on chroot #########
+install -d config/includes.chroot/usr/bin
+install -d config/includes.chroot/etc/skel
+install -d config/includes.chroot/etc/ganglia
+install -d config/includes.chroot/lib/live/mount/medium
+install -d config/package-lists
+install -d config/hooks
+########## copy stuff to be added to chroot ######
+mv "$THISDIR"/pelicanhpc.list config/package-lists/pelicanhpc.list.chroot
+echo "Sync pelicanhome ..."
+rsync -az "$THISDIR"/pelicanhome/ config/includes.chroot/etc/skel
+echo "Sync packages ..."
+rsync -az "$THISDIR"/packages/ config/packages.chroot

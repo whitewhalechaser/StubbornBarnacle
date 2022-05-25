@@ -1,0 +1,18 @@
+For clusters that mix machines with different CPUs or different numbers of cores,
+you need to edit the file /home/user/tmp/bhosts to load balance your cluster, and
+you need to know how to use mpirun properly. Please learn how to do this before 
+reporting that your cluster doesn't work properly.
+
+To get started with a simple MPI application, flops.f is provided.
+This first appeared at http://cluster.linux-ekb.info/QuickStart1.php which
+is an introduction to PelicanHPC, in Russian. It has now been GPL'ed (thanks).
+
+To use it, do something like
+
+mpif77 -o flops flops.f
+mpirun -np X --hostfile /home/user/tmp/bhosts flops
+
+where X is the number of MPI ranks you want to use. If you edit the bhosts
+file correctly, and choose X correctly, you should see a rough indication
+of what your cluster can do.
+

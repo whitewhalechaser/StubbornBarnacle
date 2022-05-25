@@ -1,0 +1,222 @@
+#!/bin/bash
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+export PATH
+TMP="/tmp/pelican_setup.tmp$$"
+DIALOG="dialog"
+TITLE="Pelican Setup"
+exec >/dev/console </dev/console 2>&1
+NORMAL="[0;39m"
+RED="[1;31m"
+GREEN="[1;32m"
+YELLOW="[1;33m"
+BLUE="[1;34m"
+MAGENTA="[1;35m"
+CYAN="[1;36m"
+WHITE="[1;37m"
+bailout(){
+	# set user password
+	# use /home/user/pw if it exists rather than asking for it.
+	#if [ ! "$PASSWORD_PROMPT" = "NO" ]; then
+	#	$DIALOG --title "$TITLE" --inputbox "Welcome to PelicanHPC. Please type in a password, and then press <enter> to continue" 15 50 "PleaseChangeMe!" 2>/home/user/pw
+	#	chmod 644 /home/user/pw
+	#fi
+	read PASSWORD </home/user/pw
+	echo "user:$PASSWORD" | /usr/sbin/chpasswd
+	usermod -c "PelicanHPC user" user
+	# Change frontend hostname to be unique based on IP.  Since frontend this is pel1
+	# This is good both when logged into nodes, but also for ganglia.
+	NODEHOSTNAME="pel1"
+	# Need to change in /etc/hosts or odd errors show up about host resolution.
+	#  sed "s/pelican/$NODEHOSTNAME/g" /etc/hostname > /etc/hostname.tmp
+	#  mv /etc/hostname.tmp /etc/hostname
+	sed "s/pelican/$NODEHOSTNAME/g" /etc/hosts > /etc/hosts.tmp
+	mv /etc/hosts.tmp /etc/hosts
+	hostname "$NODEHOSTNAME"
+	chown -R user.user /home/user
+	#echo "alias mpirun='mpirun -x PRELOAD=libmpi.so'" >> /home/user/.bashrc
+	# pelican_config: a switch to run a local script and pelican_setup
+	if [ "$RUN_FRONTEND_BOOT" = "YES" ]; then
+		if [ -e /home/user/pelican_frontend_boot ]; then
+			/home/user/pelican_frontend_boot
+		fi
+	fi
+	exit $1
+}
+bailout2(){
+	read PASSWORD </home/user/pw
+	echo "user:$PASSWORD" | /usr/sbin/chpasswd
+	# petry: Change node hostname to be unique based on IP
+	#        This is good both when logged into nodes, but also for ganglia.
+	HOST=$(/sbin/ifconfig | tr -d '\n' |sed "s/.*inet addr:$PELICAN_NETWORK.\([^ ]*\) .*/\1/")
+	NODEHOSTNAME="pel$HOST"
+	#  sed "s/pelican/$NODEHOSTNAME/g" /etc/hostname > /etc/hostname.tmp
+	#  mv /etc/hostname.tmp /etc/hostname
+	# Need to change in /etc/hosts or odd errors show up about host resolution.
+	NODEIP=$(/sbin/ifconfig | sed -n '/inet addr:/s/ *inet addr:\([[:digit:].]*\) .*/\1/p' | grep -v "127.0.0.1")
+cat >> /etc/hosts.tmp <<!HOSTS_NODE_PREAMBLE!
+127.0.0.1	localhost
+$NODEIP	$NODEHOSTNAME
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+!HOSTS_NODE_PREAMBLE!
+	mv /etc/hosts.tmp /etc/hosts
+	hostname "$NODEHOSTNAME"
+
+cat <<NODEISSUE > /etc/issue
+
+All done setting up this PelicanHPC compute node
+
+[H[J
+[1;32mThis is a [1;36mPelicanHPC [1;32mcompute node. It is part of a cluster of computers that is doing some [1;33mREALLY important stuff[1;32m.
+
+Please don\'t try to use it, and [1;31mDON\'T TURN IT OFF!
+
+[1;32mTHANKS![1;34m
+
+NODEISSUE
+
+	# petry: Added a switch to run a local node script and beep
+	if [ "$RUN_NODE_BOOT" = "YES" ]; then
+		if [ -e /home/user/pelican_node_boot ]; then
+			/home/user/pelican_node_boot
+		fi
+	fi
+	if [ ! -z "$NODE_BEEP" ]; then
+		beep $NODE_BEEP
+	fi
+	exit $1
+}
+bash -c 'echo "manual" >> /etc/init/lightdm.override'
+echo "Welcome to PelicanHPC!"
+# things for both frontend and nodes
+echo "" > /etc/motd
+echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+/etc/init.d/procps restart
+# support software compiled using older Open MPI 
+ln -s /usr/lib/openmpi/lib/libopen-rte.so.0.0.0 /usr/lib/openmpi/lib/liborte.so.0
+ln -s /usr/lib/openmpi/lib/libopen-pal.so.0.0.0 /usr/lib/openmpi/lib/libopal.so.0
+# test for master or compute node:
+# petry: changed this just to look for the words 'nfsroot' rather than
+# the ip address $PELICAN_NETWORK since 'nfsroot' will also only be there at
+# boot if this is a compute node.  That way we aren't tied into a particular
+# ip before we read the config file.
+computenode=`dmesg | grep -c nfsroot`
+if [ $computenode = 0 ]; then
+	# master node
+cat <<TFTP2 > /etc/default/tftpd-hpa
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/srv/tftp"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure"
+TFTP2
+	echo "making initrd.img for netboot, this will take a little while"
+	mkinitramfs -d /etc/initramfs-pxe -o /srv/tftp/initrd.img >/dev/null &
+	mkdir -p /home
+	rm -f "$TMP"
+	# waiting to avoid live-boot:message
+	#dialogcount=0
+	#while [ $dialogcount -lt 100 ]
+	#do
+		#        dialog --title "Welcome to PelicanHPC configuration" --gauge "Please wait ...." 10 60 $dialogcount & sleep 0.3
+		#        dialogcount=$(($dialogcount+6))
+	#done
+
+	# changing keyboad layout
+	#dpkg-reconfigure console-data
+	# petry: Search for a device with the label "PELHOME" to mount as the home
+	# directory should it exist.  Note some filesystems (vfat) only allow 11
+	# character labels.  Also note that the cdrom already has label PelicanHPC.
+	# This mounting of a home directory in this way is similar to the idea
+	# of a persistent partition with which it could perhaps be replaced.
+	# Uppercase was chosen for the label since vfat seems to require this.
+	HOMELOCATION=$(blkid -L "PELHOME")
+	# petry: If found, mount the directory and check whether the configuration
+	# file expressly overrides asking about mounting home.
+	if [ ! -z "$HOMELOCATION" ]; then
+		mount $HOMELOCATION /home
+	else
+#		$DIALOG --title "$TITLE" --inputbox "Do NOT type anything into this input box, it is only for the convenience of advanced users who have experience using PelicanHPC, and who have read the documentation to learn what it is used for. Press <enter> to continue" 15 50 "-t tmpfs -o size=400m tmpfs" 2>"$TMP"
+#		read HOMELOCATION <"$TMP" ; rm -f "$TMP"
+		if [ ! -z "$HOMELOCATIONTMP" ]; then
+			mount $HOMELOCATIONTMP /home
+		else
+			mount -t tmpfs -o size=400m tmpfs /home
+		fi
+	fi
+	install -d /home/user
+	# Copying files if /home/user/pw file isn't exist
+	if [ ! -f /home/user/pw ]; then
+		rsync -avz /etc/skel/ /home/user/
+		echo -n "PelicanHPC" > /home/user/pw
+		# Desktop links for tutorial
+		ln -s /home/user/Tutorial/PelicanTutorial.pdf /home/user/Desktop/PelicanTutorial.pdf
+		bailout
+	fi
+	# petry: default variable values
+	FRONTEND_SCRATCH_MOUNT="/mnt/scratch"
+	# petry: Load the configuration file if it exists
+	if [ -e /home/user/pelican_config ]; then
+		. /home/user/pelican_config
+	fi
+	# petry: Check for a device with the label "PELSCRATCH" and mount it at
+	# /usr/local/scratch . While /home is exported to all the nodes, it could
+	# be useful to have local scratch space both here on the frontend and also
+	# on the nodes.
+	SCRATCHLOCATION=$(blkid -L "PELSCRATCH")
+	if [ ! -z "$SCRATCHLOCATION" ]; then
+		mkdir -p $FRONTEND_SCRATCH_MOUNT
+		mount $SCRATCHLOCATION $FRONTEND_SCRATCH_MOUNT
+		chmod 777 $FRONTEND_SCRATCH_MOUNT
+	fi 
+	# petry: add a link to shutdown the nodes in the halt and reboot runlevels (0)
+	#        and (6) respectively.
+	if [ "$AUTO_NODE_SHUTDOWN" = "YES" ]; then
+		ln -s /usr/bin/pelican_nodes /etc/rc0.d/K10pelican_nodes
+		ln -s /usr/bin/pelican_nodes /etc/rc6.d/K10pelican_nodes
+	fi
+	bailout
+	# for the compute nodes
+else
+	# petry: deleted the following, added the -p to mkdir
+	#rm -R -f /home
+	mkdir -p /home
+	# petry: extract the frontend IP address from dmesg since we can't read
+	# config file yet.
+	PELICAN_FRONTEND=$(dmesg | tr '\n' ' ' | sed 's/.*nfsroot=\([^:]*\):.*/\1/')
+	mount $PELICAN_FRONTEND:/home /home
+	# petry: default variable values
+	PELICAN_NETWORK="10.11.12"
+	NODE_SCRATCH_MOUNT="/mnt/scratch"
+	# petry: Load the configuration file if it exists
+	if [ -e /home/user/pelican_config ]; then
+		. /home/user/pelican_config
+	fi
+	# petry: shut down if we are not running setup and SHUTDOWN_IF_NOT_SETUP
+	# is configured
+	if [ "$SHUTDOWN_IF_NOT_SETUP" = "YES" ]; then
+		if [ ! -e /home/user/.running_pelican_restart_hpc ]; then
+			shutdown -h now
+		fi
+	fi
+	myip=(`/sbin/ifconfig | grep -i "Ethernet" -A 1|grep "inet addr"|cut -d  " " -f 12|cut -d ":" -f 2`)
+	echo "$myip is up" > /home/user/tmp/$myip
+	# petry: Check for a device with the label "PELSCRATCH" and mount it at
+	# /usr/local/scratch . While /home is exported to all the nodes, it could
+	# be useful to have local scratch space both here on the nodes.
+	SCRATCHLOCATION=$(blkid -L "PELSCRATCH")
+	if [ ! -z "$SCRATCHLOCATION" ]; then
+		mkdir -p $NODE_SCRATCH_MOUNT
+		mount $SCRATCHLOCATION $NODE_SCRATCH_MOUNT
+		chmod 777 $FRONTEND_SCRATCH_MOUNT
+	fi 
+	# support software compiled using older Open MPI 
+	ln -s /usr/lib/openmpi/lib/libopen-rte.so.0.0.0 /usr/lib/openmpi/lib/liborte.so.0
+	ln -s /usr/lib/openmpi/lib/libopen-pal.so.0.0.0 /usr/lib/openmpi/lib/libopal.so.0 
+	bailout2
+fi
+

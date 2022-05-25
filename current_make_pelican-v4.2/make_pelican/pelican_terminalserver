@@ -1,0 +1,123 @@
+#!/bin/sh
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+export PATH
+DIALOG="dialog"
+# petry : define variable defaults
+PELICAN_NETWORK="10.11.12"
+MAXNODES="100"
+# petry : Load configuration file (potentially override defaults)
+if [ -e /home/user/pelican_config ]; then
+	. /home/user/pelican_config
+fi
+[ "`id -u`" != "0" ] && exec sudo "$0" "$@"
+bailout(){
+	exit $1
+}
+
+# petry: added read-ethers to allow static IP
+cat <<DNSMASQ > /etc/dnsmasq.conf
+dhcp-range=$PELICAN_NETWORK.2,$PELICAN_NETWORK.$MAXNODES,255.255.255.0,12h
+dhcp-boot=pxelinux.0,pelican,$PELICAN_NETWORK.1
+read-ethers
+DNSMASQ
+
+# petry: create /etc/ethers if NODE_INFO defined.
+#        just put empty file if it isn't.
+touch /etc/ethers
+if [ ! -z "$NODE_INFO" ]; then
+	# first make list of reserved IPs
+	RESERVED_HOSTS=""
+	for i in $NODE_INFO; do
+		NODEHOST=""
+		if echo $i | grep -q "i"; then
+			NODEHOST=$(echo $i | sed 's/[^i]*i0*\([0-9]*\).*/\1/')
+		fi
+		if [ ! -z "$NODEHOST" ]; then
+			RESERVED_HOSTS="$RESERVED_HOSTS $NODEHOST "
+		fi
+	done
+	# create /etc/ethers
+	rm -f /etc/ethers
+	HOST=1
+	for i in $NODE_INFO; do
+		NODEHOST=""
+		if echo $i | grep -q "i"; then
+			NODEHOST=$(echo $i | sed 's/[^i]*i0*\([0-9]*\).*/\1/')
+		fi
+		if [ -z "$NODEHOST" ]; then
+			HOST=$((HOST+1))
+			while echo "$RESERVED_HOSTS" | grep -q " $HOST "; do
+				HOST=$((HOST+1))
+			done
+			NODEHOST=$HOST
+		fi
+		NODEIP="$PELICAN_NETWORK.$NODEHOST"
+		NODEHWADDR=$(echo $i | cut -b 1-17)
+		echo "$NODEHWADDR $NODEIP" >> /etc/ethers
+	done
+fi
+
+cat <<TFTP > /etc/xinetd.d/tftp-hpa
+service tftp
+{
+	disable         = no
+	id              = chargen-dgram
+        socket_type     = dgram
+        protocol        = udp
+        user            = root
+        wait            = yes
+	server          = /usr/sbin/in.tftpd
+	server_args     = -s /srv/tftp/
+}
+TFTP
+
+cat <<TFTP2 > /etc/default/tftpd-hpa
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/srv/tftp"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure"
+TFTP2
+
+# set up PXE service
+install -d /srv/tftp/pxelinux.cfg
+cp /usr/lib/PXELINUX/pxelinux.0 /srv/tftp/
+cp /usr/lib/syslinux/modules/bios/ldlinux.c32 /srv/tftp/
+
+cp /boot/vmlinuz-`uname -r` /srv/tftp/
+cat << PXECONFIG > /srv/tftp/pxelinux.cfg/default
+DEFAULT linux
+LABEL linux
+KERNEL vmlinuz-`uname -r`
+APPEND initrd=initrd.img  nfsroot=$PELICAN_NETWORK.1:/lib/live/mount/medium ip=dhcp rw noautologin noxautologin union=aufs netboot=nfs hostname=pelican boot=live noeject config quiet 3
+PXECONFIG
+
+# generate /etc/exports
+cat <<EXPORTS > /etc/exports
+/lib/live/mount/medium *(ro,async,no_subtree_check,no_root_squash,fsid=12345)
+/home $PELICAN_NETWORK.0/255.255.255.0(rw,no_root_squash,async,no_subtree_check,fsid=54321)
+EXPORTS
+
+#--------------------------------------------------
+# # this is needed for sid, as of Sept 2009
+# cat <<PORTMAP > /etc/default/portmap
+# OPTIONS=
+# PORTMAP
+#-------------------------------------------------- 
+
+# start services
+# petry: Don't prompt if config variable set to override it
+if [ ! "$NETBOOT_PROMPT" = "NO" ]; then
+	TITLE="Start Pelican HPC netboot services"
+	MESSAGE="We now get ready to set up the cluster by starting services that will allow the compute nodes to netboot. IMPORTANT: do not proceed if your cluster is on an existing network, or PelicanHPC's dhcp server may conflict with a running dhcp server. Continue?"
+	$DIALOG --title "$TITLE" --yesno "$MESSAGE" 15 90 || bailout
+fi
+sync
+systemctl restart rpcbind
+systemctl restart xinetd
+systemctl restart tftpd-hpa >/dev/null 2>&1
+systemctl stop tftpd-hpa >/dev/null 2>&1
+systemctl start tftpd-hpa >/dev/null 2>&1
+systemctl restart dnsmasq
+systemctl restart nfs-kernel-server
+sleep 5
+bailout

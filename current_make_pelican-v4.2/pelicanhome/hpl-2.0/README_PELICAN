@@ -1,0 +1,18 @@
+To try out hpl on PelicanHPC:
+
+1) you need to compile the xhpl benchmark. To do this, open a terminal in
+this directory and type "sh SetupForPelican"
+
+2) once it's compiled, go to ./bin/Pelican and type
+"orterun --hostfile /home/user/tmp/bhosts -np 4 xhpl"
+
+This assumes you have already set up the cluster. If not, just
+omit the --hostfile /home... switch, and it will run on the 
+frontend only.
+
+To get good performance, you need to edit the file ./bin/Pelican/HPL.dat
+to provide reasonable values for the inputs. I suggest something like
+P=1
+Q=3
+Ns=2000 or more depending on RAM
+NBs=100

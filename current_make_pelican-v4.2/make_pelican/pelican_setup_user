@@ -1,0 +1,41 @@
+#!/bin/bash
+bailout(){
+	exit $1
+}
+# petry: set default variable values
+PELICAN_NETWORK="10.11.12"
+MAXNODES="100"
+# petry: load config file (potentially override defaults).
+if [ -e /home/user/pelican_config ]; then
+	. /home/user/pelican_config
+fi
+cd /home/user
+HOME="/home/user"
+PKTMP="$HOME/tmp"
+echo "Creating temporary directory"
+rm -R -f $PKTMP
+mkdir $PKTMP
+chown user.user $PKTMP
+chmod 777 $PKTMP
+# generate keys if not there 
+if [ -f "/home/user/.ssh/pelicanhpc_rsa.pub" ]; then
+	echo "ssh already configured"
+else 
+	echo "Generating new RSA keys"
+	ssh-keygen  -q -t rsa -N "" -f "$HOME/.ssh/pelicanhpc_rsa"
+	cp $HOME/.ssh/pelicanhpc_rsa.pub $HOME/.ssh/authorized_keys
+	chmod 600 $HOME/.ssh/authorized_keys
+fi
+ssh-add $HOME/.ssh/pelicanhpc_rsa >/dev/null 2>&1
+rm -f $HOME/.ssh/known_hosts
+# make list of hosts to fping
+echo "$PELICAN_NETWORK.2" > $HOME/fpinghosts
+i=2
+# petry: changed the following to -le from -lt to include MAXNODES
+#        to be consistent with dnsmasq setup.
+while [ $i -le $MAXNODES ]
+do
+	i=`expr $i + 1`
+	echo $PELICAN_NETWORK.$i >> $HOME/fpinghosts
+done
+bailout

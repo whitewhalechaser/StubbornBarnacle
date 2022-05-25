@@ -1,0 +1,9 @@
+#!/bin/sh
+# uncomment the following to get the files on the official releases
+# or replace the URL or the contents of ./pelicanhome with your own
+# files to add custimized content
+if [ ! -e "pelicanhome-v4.1.tar.bz2" ]; then
+  wget http://pelicanhpc.org/download/pelicanhome-v4.1.tar.bz2
+fi
+tar xfj pelicanhome-v4.1.tar.bz2
+sync

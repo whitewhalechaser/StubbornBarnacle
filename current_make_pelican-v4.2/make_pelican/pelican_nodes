@@ -1,0 +1,47 @@
+#!/bin/sh
+# petry: script takes a single argument, start or stop.  If "start" it
+#        will WOL any machines configured with NODE_INFO in the
+#        pelican_config file.  If given the "stop" argument it will
+#        shut down all active nodes on the cluster except the
+#        frontend.  This script can be configured to run automatically
+#        when the frontend shuts down - see pelican_config entry
+#        AUTO_NODE_SHUTDOWN .
+#
+# petry: script needs to run as user 'user' for ssh to nodes to work.
+if [ ! "$(whoami)" = 'user' ]; then
+	su user -c "pelican_nodes $1"
+	exit 0
+fi 
+# petry: define default values here
+PELICAN_NETWORK="10.11.12"
+NODE_INFO=""
+WOL_NODE_DELAY=5
+WOL_FINAL_DELAY=10
+NODE_SHUTDOWN_DELAY="2"
+# petry: load config file (potentially override defaults)
+if [ -e /home/user/pelican_config ]; then
+	. /home/user/pelican_config
+fi
+if [ "$1" = "start" ]; then
+	FRONTENDIP="$PELICAN_NETWORK.1"
+	# get cluster ethernet device. Need to escape periods for sed
+	FRONTENDIP_FOR_SED=$(echo "$FRONTENDIP" | sed 's/\./\\\./g')
+	CLUSTER_DEV=$(/sbin/ifconfig -a | tr -d '\n' | sed "s/.*\(eth[^ ]*\).*$FRONTENDIP_FOR_SED.*/\1/")
+	for HOST in $NODE_INFO; do
+		HOST_MAC=$(echo $HOST | cut -b 1-17)
+		sudo etherwake -i "$CLUSTER_DEV" "$HOST_MAC"
+		sleep "$WOL_NODE_DELAY"
+	done
+	sleep "$WOL_FINAL_DELAY"
+elif [ "$1" = "stop" ]; then
+	PKTMP="/home/user/tmp"
+	for HOSTIP in $(sed 's/\([^ ]*\).*/\1/' "$PKTMP/bhosts"); do
+		if [ ! "$HOSTIP" = "$PELICAN_NETWORK.1" ]; then
+			ssh "$HOSTIP" "sudo shutdown -h now"
+			sleep "$NODE_SHUTDOWN_DELAY"
+		fi
+	done
+	exit 0
+else
+	echo "usage is pelican_nodes start|stop"
+fi

@@ -1,0 +1,125 @@
+#!/bin/bash
+# modification of netcardconfig from Knoppix.
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+export PATH
+DIALOG="dialog"
+[ "`id -u`" != "0" ] && exec sudo "$0" "$@"
+TMP="/tmp/netconfig.tmp$$"
+# Define default variables
+PELICAN_NETWORK="10.11.12"
+FW_SERVICES_TCP="22"
+FW_SERVICES_UDP=""
+FW_ICMP_ECHO="YES"
+FW_NAT="YES"
+# petry: Load the configuration file if it exists, potentially override variables.
+if [ -e /home/user/pelican_config ]; then
+	. /home/user/pelican_config
+fi
+bailout(){
+	rm -f "$TMP"
+	exit $1
+}
+TITLE="Pelican Setup"
+MESSAGE0="No supported network cards found."
+MESSAGE1="Please select the network device that connects to the cluster."
+NETDEVICES="$(cat /proc/net/dev | awk -F: '/eth.:|br.:|tr.:|wlan.:/{print $1}')"
+if [ -z "$NETDEVICES" ]; then
+	$DIALOG --title "$TITLE" --msgbox "$MESSAGE0" 5 30
+	bailout
+fi
+count="$(echo "$NETDEVICES" | wc -w)"
+if [ "$count" -gt 1 ]; then
+	DEVICELIST=""
+	for DEVICE in $NETDEVICES; do DEVICELIST="$DEVICELIST ${DEVICE} network_device_${DEVICE}"; done
+	rm -f "$TMP"
+	echo "Hints about your net devices"
+	dmesg|grep eth
+	# petry: Only prompt if configuration variable not defined.
+	if [ -z "$CLUSTER_NETWORK" ]; then
+		rm -f "$TMP"
+		$DIALOG --menu "$MESSAGE1" 18 45 12 $DEVICELIST 2>"$TMP" || bailout
+		read DV <"$TMP" ; rm -f "$TMP"
+	fi
+else
+	# Remove additional spaces
+	DV="$(echo $NETDEVICES)"
+fi
+IP="$PELICAN_NETWORK.1"
+NM="255.255.255.0 "
+BC="$PELICAN_NETWORK.255"
+# petry: Override device if configuration variable defined.
+if [ ! -z "$CLUSTER_NETWORK" ]; then
+	if ! echo $CLUSTER_NETWORK | grep -q "eth" ; then
+		MAC_ADDRESS=$CLUSTER_NETWORK
+		CLUSTER_NETWORK=$(/sbin/ifconfig -a | grep "$MAC_ADDRESS" | cut -f 1 --delimiter=" ")
+		if [ -z "$CLUSTER_NETWORK" ]; then
+			echo "CLUSTER_NETWORK variable $MAC_ADDRESS is not a valid device or MAC address."
+			bailout
+		fi
+	fi
+	DV=$CLUSTER_NETWORK
+fi
+# fixing problem>ifdown: interface xxxx not configured< when trying to discounnect network device
+nmcli d disconnect $DV >/dev/null 2>&1
+sleep 4
+CMD="ifconfig $DV $IP netmask $NM broadcast $BC up"
+$CMD
+sleep 4
+# petry: configure firewall
+if [ ! "$FIREWALL" = "YES" ]; then
+	bailout
+fi
+# put our variables in form suitable for debconf
+if [ "$FW_ICMP_ECHO" = "NO" ]; then
+	FW_ICMP_ECHO="false"
+else
+	FW_ICMP_ECHO="true"
+fi
+if [ "$FW_NAT" = "NO" ]; then
+	FW_NAT="false"
+else
+	FW_NAT="true"
+fi
+# Get external net device list if not provided
+if [ -z "$FW_CONFIG_EXT_IF" ]; then
+	for DEVICE in $NETDEVICES; do
+		if [ ! "$DEVICE" = "$DV" ]; then
+			FW_CONFIG_EXT_IF="$FW_CONFIG_EXT_IF $DEVICE"
+		fi
+	done
+fi
+if [ -z "$FW_CONFIG_EXT_IF" ]; then
+	echo "No external ethernet devices found.  Not starting firewall."
+	bailout
+fi
+# Use debconf to configure the firewall. (requires debconf-utils)
+# We need to remove old configuration file first for this to work it seems.
+rm -f /etc/arno-iptables-firewall/debconf.cfg
+debconf-set-selections <<DEBCONF
+# Use debconf for configuration
+arno-iptables-firewall	arno-iptables-firewall/debconf-wanted	boolean	true
+# External network interface(s). Multiple external interfaces should be space separated.
+arno-iptables-firewall	arno-iptables-firewall/config-ext-if	string	$FW_CONFIG_EXT_IF
+# External interfaces get their settings via DHCP - this leaves it open
+arno-iptables-firewall	arno-iptables-firewall/dynamic-ip	boolean	true
+# TCP ports that will not be blocked on external interfaces.
+arno-iptables-firewall	arno-iptables-firewall/services-tcp	string	$FW_SERVICES_TCP
+# UDP ports not to be blocked on external interfaces
+arno-iptables-firewall	arno-iptables-firewall/services-udp	string	$FW_SERVICES_UDP
+# Allow external pings or not
+arno-iptables-firewall	arno-iptables-firewall/icmp-echo	boolean	$FW_ICMP_ECHO
+# Internal network interface (trusted)
+arno-iptables-firewall	arno-iptables-firewall/config-int-if	string	$DV
+# Subnet connected to the internal interface
+arno-iptables-firewall	arno-iptables-firewall/config-int-net	string	$PELICAN_NETWORK.0/24
+# Allow nodes access to the internet through IP masquerading (NAT)
+arno-iptables-firewall	arno-iptables-firewall/nat	boolean	$FW_NAT
+# Restrict access to external network to only certain internal subnets (use
+# CIDR notation 192.168.1.0/24).  Nothing means whole internal network has
+# access.
+arno-iptables-firewall	arno-iptables-firewall/config-int-nat-net	string	
+# (Re) start firewall now.
+arno-iptables-firewall	arno-iptables-firewall/restart	boolean	true
+DEBCONF
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure arno-iptables-firewall
+bailout

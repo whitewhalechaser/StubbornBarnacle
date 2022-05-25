@@ -1,0 +1,349 @@
+#!/bin/sh
+# pelican_config
+#
+# This file defines a series of variables that modify the behaviour of
+# the live pelican hpc cluster on subsequent reboots.  Its purpose is
+# to allow a less-interactive booting of pelicanHPC as well as to add
+# useful features that require minor configuration.
+#
+# To make changes to this file permanent requires that the cluster
+# have a permanent home directory.  This requires formatting a
+# partition (hard drive, usb stick, etc.) with a filesystem (ext2/3,
+# etc.) and selecting it rather than ram1 at boot.  See the
+# documentation in Desktop/PelicanTutorial.pdf
+#
+# If one desires that the pelican cluster boot with no interaction at
+# all it is necessary that the home partition (containing this file)
+# be automatically mounted.  This is done by giving the partition the
+# label "PELHOME" which pelicanHPC looks for upon boot.  How to label a
+# partition depends on the filesystem.  For a linux ext2/3 filesystem
+# this can be done with the command
+#
+# sudo /sbin/e2label <device> "PELHOME"
+#
+# where <device> is the partition (eg. /dev/sda1 etc.)  For an msdos
+# (vfat) filesystem the mtools package can be used. From Linux, one
+# first has to map the device to a letter by editing the
+# /etc/mtools.conf file.  Then if, for instance, the drive letter
+# chosen is c, one could do
+#
+# sudo mlabel c:"PELHOME"
+#
+# Note that using a vfat partition for home has not been tested.
+#
+# By default this file configures absolutely nothing (changes no
+# behaviour during boot) unless edited, so it can be safely left in a
+# permanent home partition.  As well this config file need not be kept
+# since all default configuration is within PelicanHPC.
+#
+# ------------------------------------------------------------------------
+#
+# Each config entry is described, followed by a sample configuration
+# (usually changing it from the default), and then (optionally) a
+# usage note.
+#
+# Give option to mount home in memory
+HOMELOCATIONTMP="-t tmpfs -o size=400m tmpfs"
+# Usage note: Due to how this entry is read from the config file, it
+# must appear exactly as it is (without the #) if it is to be used.
+# Other entries in this config file are read into the scripts as usual
+# shell commands and are more forgiving.  That said, where "YES" or
+# "NO" are required, only those values are interpreted correctly.
+# Values of "y", "Y", "n", "N", "yes" or "no" WILL NOT be interpreted
+# correctly and will result in the default behaviour being selected.
+#
+# The network address for your cluster.  Defaults to 10.11.12 if this
+# is undefined. You likely only need to change this if you have
+# another frontend ethernet device already with a 10.x.x.x
+# IP address.  The following should work in that case.
+# PELICAN_NETWORK="192.168.0"
+#
+# The maximum number of machines in your cluster.  Defaults to 100 if
+# undefined.  Node IPs will range from $PELICAN_NETWORK.2 to
+# $PELICAN_NETWORK.$MAXNODES .  Maximum value is 255.  If this number
+# is unnecessarily large time is wasted pinging during setup.
+# MAXNODES=100 
+#
+# Run executable /home/user/pelican_frontend_boot (if it exists) on
+# the frontend after initial boot. Defaults to not run such an executable.
+# If RUN_PELICAN_SETUP is set to yes, the cluster setup is run after
+# the pelican_frontend_boot executable.  Remember to make any script
+# executable. (chmod a+x) This executable is run with root privilege.
+# See also the RUN_FRONTEND_LOCAL entry below.
+# RUN_FRONTEND_BOOT="YES"
+#
+# Run executable /home/user/pelican_node_boot (if it exists) on each
+# node after initial boot. Defaults to not run such an executable.
+# Remember to make any script executable. (chmod a+x) This executable
+# is run with root privilege.
+# RUN_NODE_BOOT="YES"
+#
+# Have node sound a beep upon completion of boot.  Default is not to
+# beep.  Value of NODE_BEEP can be any arguments suitable for the "beep"
+# command.
+# NODE_BEEP="-r 2 -d 10"
+#
+# Network device connected to cluster.  If this is defined then the
+# user will not be prompted to choose the network device should
+# multiple devices be detected.  This can either be the device name
+# (eth0, eth1, etc.) or it can be the MAC hardware address of the
+# ethernet card attached to the cluster network exactly as it appears
+# when running
+# /sbin/ifconfig -a
+# (The eth? device name will be found from the MAC address using that
+# command.) The purpose of allowing a MAC Hardware address is to avoid
+# problems with device names not being consistently mapped to hardware
+# at boot.
+# CLUSTER_NETWORK="eth1"
+#
+# Give prompt whether to start the services required for netbooting
+# (dhcp, nfs exporting, etc.)  Default is to prompt.  If no prompt is
+# given, the netboot services are automatically started.
+# NETBOOT_PROMPT="NO"
+#
+# Start firewall.  As part of networking services pelicanHPC can start
+# a firewall on the frontend that will restrict access to the frontend
+# on any external network devices while allowing unrestricted
+# communication on the internal (cluster) network.  The next few
+# variables (FW_*) allow modification of the firewall behaviour.
+# Default is to NOT start the firewall.
+# FIREWALL="YES"
+#
+# External network devices to be firewalled.  External network
+# interface(s) can be specified here which the firewall should block.
+# Multiple interfaces should be space separated.  If not specified the
+# default is to firewall all network devices autodetected which are
+# not the cluster network.  The following is just a sample for
+# formatting.
+# FW_CONFIG_EXT_IF="eth0 eth2 wlan0"
+# Note: The internal (cluster) network which is trusted is
+# autodetected.
+
+# TCP ports to leave open (not block with firewall) on external
+# interfaces.  Default is to only allow secure shell (port 22).
+# Multiple ports must be space separated.  The following would allow
+# external connection to the webserver (port 80) as well so that the
+# cluster status could be monitored by anyone externally.
+# FW_SERVICES_TCP="22 80"
+# Note: With the default configuration (just ssh allowed) one may
+# still use ssh -X to log into the frontend remotely followed by
+# starting a web browser on that machine to look at the web frontend
+# of the ganglia monitoring system.
+#
+# UDP ports to leave open (not block with the firewall) on external
+# interfaces.  Default is to block all UDP ports.  Multiple ports must
+# be space separated.
+# FW_SERVICES_UDP=""
+#
+# Allow pinging of external interfaces.  By default the firewall will
+# allow pings to the external interface (with some restrictions to
+# prevent certain types of attacks).  The following will disable any
+# ping response.
+# FW_ICMP_ECHO="NO"
+#
+# Allow nodes access to the Internet.  By default IP masquerading
+# (NAT) is turned on by the firewall so that nodes can connect to the
+# (external) Internet.  The following will disable this behaviour.
+# FW_NAT="NO"
+#
+# Give prompt warning that restarting the cluster will interrupt
+# running MPI jobs.  Default is to give the prompt.
+# MPI_WARNING_PROMPT="NO"
+#
+# Automatically wake-on-lan (WOL) cluster nodes with MAC hardware
+# addresses listed in NODE_INFO (below) when setting up the cluster
+# (i.e. so you won't have to physically turn them on.)  Nodes will be
+# booted in the order they appear there.  Default is to not send WOL
+# signals to the nodes.
+# WOL_NODES="YES"
+# Note: You will have to configure the BIOS of each node to allow WOL
+# signals to work.  A typical BIOS entry will be under "power"
+# configuration and it will say "power on from S5 by PME#" (which will
+# need to be enabled).  Such computers can be sent a wake-on-lan
+# signal which will autostart them provided they have been previously
+# "soft-powered down" so they are in the ACPI D3-warm state.  A normal
+# shutdown puts them in this state.  Complete power loss (accidental
+# or otherwise) to a node will put them in a state where manual
+# booting will be required (WOL will fail.)  See SHUTDOWN_IF_NOT_SETUP.
+#
+# Give prompt before sending WOL signals to cluster nodes.  Default is
+# to give prompt.  If no prompt is given, the nodes will be booted
+# automatically.  This entry only matters if WOL_NODES is defined.
+# WOL_PROMPT="NO"
+# 
+# Delay time interval between booting each node when sending WOL
+# signals.  Defaults to 5 seconds if undefined.  Time format must be
+# compatible with the "sleep" command. Only matters if WOL_NODES is
+# defined.
+# WOL_NODE_DELAY="5"
+#
+# Delay time after all nodes have been sent the wake-on-lan signal,
+# but before continuing setting up the final cluster. Defaults to 10
+# seconds if undefined.  Time format must be compatible with the
+# "sleep" command.  Only matters if WOL_NODES is defined.  Note if the
+# DETECT_NODES_PROMPT variable is YES (see next variable) then this
+# delay can be set to zero.
+# WOL_FINAL_DELAY="10" 
+#
+# Once the pelican_setup script has been run, the terminal server
+# continues to operate so subsequent node boots will boot over the
+# LAN.  (One can then rerun pelican_restart_hpc and pick them up).
+# This is the default behaviour.  If the following variable is set to
+# YES, nodes will still boot over the LAN outside of the
+# pelican_setup/pelican_restart_hpc scripts running, however they will
+# then proceed to shut themselves down once the boot is complete.
+# SHUTDOWN_IF_NOT_SETUP="YES"
+# Note: The purpose of this option is to deal with power outages.  As
+# mentioned under the WOL_NODES option, a power outage will place a
+# node in a state which will not typically allow a WOL signal to work.
+# However nodes can be configured in their BIOS to automatically boot
+# when their power is restored.  Assuming the node BIOS is configured
+# in that way and the frontend is on (perhaps maintained by a UPS),
+# nodes will boot and promptly shut down, but now they will be in a
+# state suitable for a wake-on-lan signal to work again.  (Since any
+# work that was being done by the cluster before the outage would have
+# been interrupted, having the nodes off - but WOL bootable - is
+# perhaps desirable.)  Recall that the terminal server must already be
+# started for this to work.  This means that pelican_setup must have
+# been run (or at least the pelican_setup_netdevice and
+# pelican_terminalserver subscripts which it calls).  If the frontend
+# itself is auto-booted after a power interruption this could be
+# achieved using RUN_PELICAN_SETUP or alternatively by calling its
+# subscripts directly using the RUN_LOCAL_BOOT option.
+#
+# Prompt to physically turn on nodes to assemble the cluster.
+# Defaults to prompt.  If set to no, then LAN booting will need to be
+# configured.
+# DETECT_NODES_PROMPT="NO"
+#
+# The default number of slots each node has for purposes of MPI.  A
+# slot essentially corresponds to the number of parallel processes you
+# want running on a node and is likely the number of cores available
+# (or perhaps more if your processor is also hyperthreaded.)  If
+# NUM_SLOTS is defined then the argument "slots=$NUM_SLOTS" will be
+# automatically added to each entry in ~/tmp/bhosts.  Default is to
+# not have any argument added in ~/tmp/bhosts.  Note if your
+# environment is more heterogeneous and you require different slots
+# for each machine, then this can be configured individually in
+# NODE_INFO below.  In that case only machines that do not have a
+# slots configuration there will be given $NUM_SLOTS slots.
+# NUM_SLOTS="1"
+# Note ~/tmp/bhosts is the mpi "hostfile" which the user will
+# typically pass to the mpi executable with the --hostfile option.  By
+# default all this will contain is all active IP's of your cluster
+# (including the frontend) and mpi executables will assume one slot
+# per machine.
+#
+# Whether to include the frontend machine in your MPI calculations.
+# If you are running the frontend as a virtual machine, for instance,
+# you may not want to include it.  Default is to include the frontend
+# in in the calculation.
+# FRONTEND_IN_MPI="NO"
+#
+# Whether to start the ganglia cluster monitoring software.  Ganglia
+# is a convenient cluster monitoring tool which can display cluster
+# activity at a glance.  If it is started one simply has to point a
+# browser at the frontend's IP (or just use "localhost" if on the
+# frontend) and it will display the cluster statistics.  If the
+# GANGLIA variable is set to "NO" then ganglia will not be started on
+# boot.  Default is to start Ganglia.  Note that since IP addresses
+# are randomly assigned to nodes it is hard to identify them unless
+# NODE_INFO is defined below.  (Since the node names are given by
+# pel$HOST where $HOST is the last byte of the IP address, random IPs
+# are undesirable.)
+# GANGLIA="NO"
+#
+# Whether to display a prompt before starting ganglia.  If
+# GANGLIA_PROMPT is set to "YES" then the GANGLIA variable is not used
+# to determine whether GANGLIA is started, rather the user is prompted
+# whether to start ganglia.  Default is not to prompt.
+# GANGLIA_PROMPT="YES"
+#
+# Give final report message.  Default is to give the message.
+# FINAL_REPORT_PROMPT="NO"
+#
+# Compile and run the flops executable on the cluster as a final test.
+# Default is to run the test.
+# FLOPS_TEST="NO"
+#
+# Run executable /home/user/pelican_frontend_local (if it exists) on
+# the frontend after cluster initialization is complete.  Default is
+# to not run such an executable.  Remember to make any script
+# executable (chmod a+x).  This executable is run as the user "user"
+# so sudo commands are required for any script commands requiring root
+# privilege.  Also note this executable will be run every time
+# pelican_restart_hpc is run manually.  See the RUN_FRONTEND_BOOT
+# entry as well.
+# RUN_FRONTEND_LOCAL="YES"
+#
+# Automatically shutdown cluster nodes when frontend is shutdown.  If
+# set to YES then shutting down (or rebooting) the frontend will
+# automatically send a shutdown command to each configured node as
+# part of the frontend's shutdown/reboot procedure.  Default is to not
+# send shutdown commands.  Note you can run the node shutdown manually
+# by running
+# pelican_nodes stop
+# Similarly you can WOL any configured nodes with the command
+# pelican_nodes start
+# (The latter command is run within pelican_restart_hpc.)
+# AUTO_NODE_SHUTDOWN="YES"
+#
+# Delay between individual node shutdowns during auto shutdown.
+# Default is a two second delay.  Any value valid by the "sleep"
+# command works.  This variable is irrelevant unless
+# AUTO_NODE_SHUTDOWN is configured or the "pelican_nodes stop"
+# script is run.
+# NODE_SHUTDOWN_DELAY=2
+#  
+# Configure hardware information for the nodes using the following
+# NODE_INFO variable.  In its most basic form NODE_INFO lists the MAC
+# addresses of each of the nodes.  This does the following:
+# 1) During boot, rather than being assigned random IP addresses, the
+#    cluster will assign addresses sequentially with the first
+#    available address ($PELICAN_NETWORK.2) being assigned to the
+#    first MAC address listed, $PELICAN_NETWORK.3 to the second MAC
+#    address listed, etc.  (Note that $PELICAN_NETWORK.1 is reserved
+#    for the frontend.)  These are essentially static assignments and
+#    it doesn't matter in what order the nodes are actually turned on.
+# 2) If WOL_NODES is configured, machines listed here will be sent
+#    wake-on-lan (WOL) signals in the order that they appear here.
+# Further configuration is possible by adding strings to the end of the
+# MAC hardware addresses. If one adds:
+# i<num> where <num> is from 2 to 255 then the machine will be given
+#        the IP address $PELICAN_NETWORK.<num>, overriding the default
+#        sequential IP assignment described above.
+# s<num> where <num> is the number of slots available for MPI, then
+#        this will put a "slots=<num>" entry in the ~/tmp/bhosts file
+#        overriding the NUM_SLOTS variable, if it is defined.  If <num>=0
+#        no entry at all will be put in ~/tmp/bhosts for the machine, however
+#        it will still be set up for DHCP and WOL. (This allows one to
+#        configure a file or print server that is on your cluster switch
+#        but is not part of the mpi computations.) 
+# A complicated sample NODE_INFO definition follows:
+# NODE_INFO="11:11:11:11:11:11s4   \
+#            22:22:22:22:22:22i101 \
+#            33:33:33:33:33:33     \
+#                  .     .     .   \
+#                  .     .     .   \
+#            99:99:99:99:99:99i2s2 \
+#            AA:AA:AA:AA:AA:AAi102s0"
+# Assuming PELICAN_NETWORK="10.11.12", in the above configuration the
+# machines with MAC addresses 22:..., 99:..., and AA:... have their ip
+# addresses assigned as 10.11.12.101, 10.11.12.2, and 10.11.12.102
+# respectively at boot. The remainder are assigned sequentially so
+# 11:... is given 10.11.12.3 (since 10.11.12.1 is the frontend and
+# 10.11.12.2 is taken) and 33:... is given 10.11.12.4 .  Machines
+# 11:... and 99:... are given slots entries of 4 and 2 respectively in
+# ~/tmp/bhosts.  Machine AA:... is given no entry at all in
+# /tmp/bhosts (but is still configured for DHCP and potentially WOL),
+# while the remainder are all given entries in ~/tmp/bhosts with
+# either $NUM_SLOTS slots if that variable is defined, or no slots
+# configured at all if it is not.  Note it is safe to put an entry for
+# the frontend ( like <frontend MAC>i1s<num> ) if you want to specify
+# the frontend has <num> slots.
+#
+# Obviously you will have to find the real MAC addresses of your
+# nodes.  This can be done by booting and then using the
+# /sbin/ifconfig command when logged into a node.  (Systematic node
+# shutdown or the "beep" command might be useful in physically mapping
+# the nodes.)
