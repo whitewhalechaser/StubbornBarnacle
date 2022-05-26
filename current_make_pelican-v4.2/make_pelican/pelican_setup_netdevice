@@ -22,7 +22,9 @@ bailout(){
 TITLE="Pelican Setup"
 MESSAGE0="No supported network cards found."
 MESSAGE1="Please select the network device that connects to the cluster."
-NETDEVICES="$(cat /proc/net/dev | awk -F: '/eth.:|br.:|tr.:|wlan.:/{print $1}')"
+#NETDEVICES="$(cat /proc/net/dev | awk -F: '/eth.:|br.:|tr.:|wlan.:/{print $1}')"
+NETDEVICES="$(cat /proc/net/dev | awk  -F: '/.:/{print $1}' | tr -d [:blank:] | grep -v "lo")"
+
 if [ -z "$NETDEVICES" ]; then
 	$DIALOG --title "$TITLE" --msgbox "$MESSAGE0" 5 30
 	bailout
