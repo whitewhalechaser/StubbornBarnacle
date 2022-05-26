@@ -88,7 +88,7 @@ cat << PXECONFIG > /srv/tftp/pxelinux.cfg/default
 DEFAULT linux
 LABEL linux
 KERNEL vmlinuz-`uname -r`
-APPEND initrd=initrd.img  nfsroot=$PELICAN_NETWORK.1:/lib/live/mount/medium ip=dhcp rw noautologin noxautologin union=aufs netboot=nfs hostname=pelican boot=live noeject config quiet 3
+APPEND initrd=initrd.img  nfsroot=$PELICAN_NETWORK.1:/lib/live/mount/medium ip=dhcp rw noautologin noxautologin union=overlay netboot=nfs hostname=pelican boot=live noeject config quiet 3
 PXECONFIG
 
 # generate /etc/exports
