@@ -134,28 +134,31 @@ TFTP2
 	# This mounting of a home directory in this way is similar to the idea
 	# of a persistent partition with which it could perhaps be replaced.
 	# Uppercase was chosen for the label since vfat seems to require this.
-	HOMELOCATION=$(blkid -L "PELHOME")
-	# petry: If found, mount the directory and check whether the configuration
-	# file expressly overrides asking about mounting home.
-	if [ ! -z "$HOMELOCATION" ]; then
-		mount $HOMELOCATION /home
-	else
-#		$DIALOG --title "$TITLE" --inputbox "Do NOT type anything into this input box, it is only for the convenience of advanced users who have experience using PelicanHPC, and who have read the documentation to learn what it is used for. Press <enter> to continue" 15 50 "-t tmpfs -o size=400m tmpfs" 2>"$TMP"
-#		read HOMELOCATION <"$TMP" ; rm -f "$TMP"
-		if [ ! -z "$HOMELOCATIONTMP" ]; then
-			mount $HOMELOCATIONTMP /home
+	ALREADY_MOUNTED_HOME=$(cat /etc/fstab |grep -v '#'  | grep -c "home")
+	if [ "$ALREADY_MOUNTED_HOME" -lt 1 ]; then
+		HOMELOCATION=$(blkid -L "PELHOME")
+		# petry: If found, mount the directory and check whether the configuration
+		# file expressly overrides asking about mounting home.
+		if [ ! -z "$HOMELOCATION" ]; then
+			mount $HOMELOCATION /home
 		else
-			mount -t tmpfs -o size=400m tmpfs /home
+	#		$DIALOG --title "$TITLE" --inputbox "Do NOT type anything into this input box, it is only for the convenience of advanced users who have experience using PelicanHPC, and who have read the documentation to learn what it is used for. Press <enter> to continue" 15 50 "-t tmpfs -o size=400m tmpfs" 2>"$TMP"
+	#		read HOMELOCATION <"$TMP" ; rm -f "$TMP"
+			if [ ! -z "$HOMELOCATIONTMP" ]; then
+				mount $HOMELOCATIONTMP /home
+			else
+				mount -t tmpfs -o size=400m tmpfs /home
+			fi
 		fi
-	fi
-	install -d /home/user
-	# Copying files if /home/user/pw file isn't exist
-	if [ ! -f /home/user/pw ]; then
-		rsync -avz /etc/skel/ /home/user/
-		echo -n "PelicanHPC" > /home/user/pw
-		# Desktop links for tutorial
-		ln -s /home/user/Tutorial/PelicanTutorial.pdf /home/user/Desktop/PelicanTutorial.pdf
-		bailout
+		install -d /home/user
+		# Copying files if /home/user/pw file isn't exist
+		if [ ! -f /home/user/pw ]; then
+			rsync -avz /etc/skel/ /home/user/
+			echo -n "PelicanHPC" > /home/user/pw
+			# Desktop links for tutorial
+			ln -s /home/user/Tutorial/PelicanTutorial.pdf /home/user/Desktop/PelicanTutorial.pdf
+			bailout
+		fi
 	fi
 	# petry: default variable values
 	FRONTEND_SCRATCH_MOUNT="/mnt/scratch"
