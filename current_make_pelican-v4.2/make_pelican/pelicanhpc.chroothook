@@ -26,15 +26,15 @@ sed -i 's/BOOT=local/BOOT=nfs/g' /etc/initramfs-pxe/initramfs.conf
 #        -disable avahi-daemon, yet another dns-caching mechanism which messes with ganglia
 #        -disable firewall
 
-update-rc.d ganglia-monitor disable
-update-rc.d gmetad disable
-update-rc.d apache2 disable
+#update-rc.d ganglia-monitor disable
+#update-rc.d gmetad disable
+#update-rc.d apache2 disable
 update-rc.d dnsmasq disable
 update-rc.d avahi-daemon disable
 update-rc.d arno-iptables-firewall disable
-update-rc.d gdm disable
+#update-rc.d gdm disable
 update-rc.d gdm3 disable
-update-rc.d xdm disable
+#update-rc.d xdm disable
 
 #update-flashplugin-nonfree --install
 
