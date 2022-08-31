@@ -1,4 +1,5 @@
 #!/bin/sh
+set e
 PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 export PATH
 DIALOG="dialog"
@@ -106,7 +107,7 @@ then
 cat << PXECONFIG > /srv/tftp/pxelinux.cfg/default
 DEFAULT linux
 LABEL linux
-KERNEL vmlinuz-$VMLINZ_ON_ISO
+KERNEL $VMLINZ_ON_ISO
 APPEND initrd=initrd.img  nfsroot=$PELICAN_NETWORK.1:/lib/live/mount/medium ip=dhcp rw noautologin noxautologin union=overlay netboot=nfs hostname=pelican mitigations=off boot=live noeject config quiet 3
 PXECONFIG
 
