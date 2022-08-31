@@ -79,7 +79,7 @@ TFTP_OPTIONS="--secure"
 TFTP2
 
 
-if [$THIS_IS_PERMANENT_INSTALL==" YES" ]
+if [$THIS_IS_PERMANENT_INSTALL = "YES" ];
 then
 	# mount the iso 
 	mount -o loop  $PATH_TO_MOST_CURRENT_PELICAN_ISO /usr/lib/live/mount/medium
