@@ -79,7 +79,7 @@ TFTP_OPTIONS="--secure"
 TFTP2
 
 
-if [$THIS_IS_PERMANENT_INSTALL =" YES" ]
+if [$THIS_IS_PERMANENT_INSTALL==" YES" ]
 then
 	# mount the iso 
 	mount -o loop  $PATH_TO_MOST_CURRENT_PELICAN_ISO /usr/lib/live/mount/medium
@@ -88,16 +88,16 @@ then
 	mount /usr/lib/live/mount/medium/live/filesystem.squashfs  /tmp/temp_mount_for_squashfs -t squashfs -o loop
 	
 	#update the scripts from new build, good for dogfooding this thing
-	cp -a /tmp/temp_mount_for_squashfs/usr/bin/*pelican* /usr/bin/
+	cp  /tmp/temp_mount_for_squashfs/usr/bin/*pelican* /usr/bin/
 	
 	# this will overwrite the (possibly) previously generated initrd.img (created in the pelican_boot_setup, when server started)
-	cp -a /tmp/temp_mount_for_squashfs/initrd.img /srv/tftp/
+	cp  /tmp/temp_mount_for_squashfs/initrd.img /srv/tftp/
 
 	# more copying...
 	install -d /srv/tftp/pxelinux.cfg
 	cp  /tmp/temp_mount_for_squashfs/usr/lib/PXELINUX/pxelinux.0 /srv/tftp/
 	cp  /tmp/temp_mount_for_squashfs/usr/lib/syslinux/modules/bios/ldlinux.c32 /srv/tftp/
-	cp -a /tmp/temp_mount_for_squashfs/boot/vmlinuz-* /srv/tftp/ 
+	cp  /tmp/temp_mount_for_squashfs/boot/vmlinuz-* /srv/tftp/ 
 
 	# now, trying to get the correct file for the below script.  Cannot use 'uname -r', as the server's version of linux may be diff than
 	# the version on the iso.  Hoping there is just one "vmlinz..." file.
