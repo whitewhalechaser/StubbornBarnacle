@@ -1,0 +1,56 @@
+#!/bin/sh
+#### packages to include on image - place names of packages you want here ####
+rm -f *~
+cat <<PACKAGELIST > pelicanhpc.list
+# X stuff: task-xfce-desktop, task-gnome-desktop
+#task-xfce-desktop
+# keyboard layout in tty
+console-data console-setup console-common
+# basic stuff needed for cluster setup
+dnsmasq nfs-kernel-server nfs-common
+tftpd-hpa xinetd ssh
+# oof2 dependency
+#python-gtk2-dev libgnomecanvas2-dev libmagick++-dev
+#liblapack-dev bison
+# configuration and tools
+dialog rsync fping geeqie pssh lm-sensors
+xsensors gnuplot xpdf csh tcsh ksh bc 
+gparted zip unzip dsh debootstrap syslinux pxelinux live-build
+# WOL
+etherwake beep
+debconf-utils arno-iptables-firewall
+# octave
+#octave  octave-doc 
+# openmpi
+#libopenmpi-dev openmpi-bin openmpi-doc
+# dynare
+dynare dynare-doc
+# gretl
+#gretl gretl-data gretl-doc gretl-common
+# ganglia, firewall
+#ganglia-monitor gmetad libganglia1 ganglia-webfrontend
+librrds-perl firefox-esr
+apache2 php7.4 rrdtool php7.4-gd
+# Python
+#python-matplotlib-data 
+#ipython3 python-gmpy2-common
+net-tools
+screen 
+
+# This section added by jss lists the packages that were
+# previously included, but don't seem to be available from the Debian 
+# repositories, at least without some more troubleshooting.
+# virtualbox rar unrar octave-info python-scipy python-numpy
+# python-mpmath python-mpi4py qtiplot librrd2-dev 
+
+# Fixing warning:
+#The XKEYBOARD keymap compiler (xkbcomp) reports:
+#> Warning:          Compat map for group 2 redefined
+#>                   Using new definition
+#> Warning:          Compat map for group 3 redefined
+#>                   Using new definition
+#> Warning:          Compat map for group 4 redefined
+#>                   Using new definition
+#Errors from xkbcomp are not fatal to the X server
+xserver-xorg-input-kbd
+PACKAGELIST

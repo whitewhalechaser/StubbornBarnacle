@@ -1,0 +1,101 @@
+#!/bin/sh
+# Copyright 2022 Justin S (aka jss)
+#Copyright 2014 2015 2016 Aissam Hidoussi    hidoussiaissam    at  gmail    dot com
+#Copyright 2007, 2008, 2009, 2010, 2011, 2014 Michael Creel  michael   dot  creel   at  uab dot es
+#Copyright 2010 Robert G. Petry  rpetry   at accesscomm  ddot ca
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# set this to the network you'd like to use for the cluster
+
+# make_pelican: this script allows you to make a custom version
+# of the PelicanHPC live CD/USB image for creation of high performance
+# computing clusters. You need to install live-build, debootstrap and rsync to use
+# it. These packages are installed on PelicanHPC released images, so you can use
+# this script on PelicanHPC. It can be used on any other GNU/Linux distro as long
+# as these packages are installed.
+# See http://pelicanhpc.org for more information.
+
+# PelicanHPC Version 4.2
+# Debian 11.3 (bullseye)
+# Usage: sudo ./make_pelican-v4.2-xfce
+
+THISDIR="`pwd`"
+SCRIPTDIR=$THISDIR"/make_pelican"
+
+# cleaning old frontend configuration
+rm -rf build.log config/ packages .build/ cache/bootstrap *~ */*~
+rm -rf auto
+lb clean
+
+#### packages to include on image - place names of packages you want here ####
+. $SCRIPTDIR/pelicanhpc.list.min_no_gui
+
+#Name of generated PelicanHPC ISO
+IMAGENAME="pelicanhpc-v4.2-min_no_gui.iso"
+
+################## OPTIONS FOR IMAGE  ################
+. $SCRIPTDIR/pelicanhpc.setoptions
+
+################## pelicanhome ###########################
+. $SCRIPTDIR/pelicanhpc.sethome
+
+
+######################################################################################
+##   !!!!!         END OF NORMAL CONFIGURATION OPTIONS                  !!!!!!!!!   ##
+## leave the rest of this alone unless you really know what you're up to            ##
+######################################################################################
+
+# ISOLINUX SPLASH SCREEN & TIMEOUT
+. $SCRIPTDIR/pelicanhpc.splash
+
+########## make home & package directories #########
+. $SCRIPTDIR/pelicanhpc.installdir
+
+# frontend configuration
+lb config
+
+########## make directories on chroot #########
+. $SCRIPTDIR/pelicanhpc.chrootdir
+
+# chroot hook: configure initrd for netboot of compute nodes, and install some software from source
+. $SCRIPTDIR/pelicanhpc.chroothook
+
+######## WRITE THE PELICAN SETUP SCRIPTS #############
+cp $SCRIPTDIR/issue config/includes.chroot/etc/issue
+cp $SCRIPTDIR/pelican_boot_setup config/includes.chroot/usr/bin/pelican_boot_setup
+cp $SCRIPTDIR/pelican_setup config/includes.chroot/usr/bin/pelican_setup
+cp $SCRIPTDIR/pelican_setup_user config/includes.chroot/usr/bin/pelican_setup_user
+cp $SCRIPTDIR/pelican_setup_netdevice config/includes.chroot/usr/bin/pelican_setup_netdevice
+cp $SCRIPTDIR/pelican_terminalserver config/includes.chroot/usr/bin/pelican_terminalserver
+cp $SCRIPTDIR/pelican_restart_hpc config/includes.chroot/usr/bin/pelican_restart_hpc
+cp $SCRIPTDIR/pelican_nodes config/includes.chroot/usr/bin/pelican_nodes
+cp $SCRIPTDIR/pelican_config config/includes.chroot/etc/skel/pelican_config
+######## END OF PELICAN SETUP SCRIPTS #############
+
+######## POST BOOT SCRIPT ####################
+install -d config/includes.chroot/usr/share/initramfs-tools/scripts/live-bottom/
+cp $SCRIPTDIR/99script config/includes.chroot/usr/share/initramfs-tools/scripts/live-bottom/99script
+chmod +x config/includes.chroot/usr/share/initramfs-tools/scripts/live-bottom/99script
+
+# make the scripts in /usr/bin executable
+chmod +x config/includes.chroot/usr/bin/*
+
+# Build PelicanHPC
+lb build
+
+# Rename the ISO Image
+if [ ! -e "live-image-amd64.hybrid.iso" ]; then
+   echo "Ops, cannot stat iso image, building failed ..."
+else
+  mv live-image-amd64.hybrid.iso ${IMAGENAME}
+fi

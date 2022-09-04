@@ -8,6 +8,7 @@ PELICAN_NETWORK="10.11.12"
 MAXNODES="100"
 # petry : Load configuration file (potentially override defaults)
 if [ -e /home/user/pelican_config ]; then
+	echo "loading config from /home/user/pelican_config"
 	. /home/user/pelican_config
 fi
 [ "`id -u`" != "0" ] && exec sudo "$0" "$@"
