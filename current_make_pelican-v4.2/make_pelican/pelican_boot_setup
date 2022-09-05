@@ -145,9 +145,12 @@ echo "Welcome to PelicanHPC!"
 echo "" > /etc/motd
 echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 /etc/init.d/procps restart
+
 # support software compiled using older Open MPI 
-ln -s /usr/lib/openmpi/lib/libopen-rte.so.0.0.0 /usr/lib/openmpi/lib/liborte.so.0
-ln -s /usr/lib/openmpi/lib/libopen-pal.so.0.0.0 /usr/lib/openmpi/lib/libopal.so.0
+#jss- commenting these out for now, 
+#ln -s /usr/lib/openmpi/lib/libopen-rte.so.0.0.0 /usr/lib/openmpi/lib/liborte.so.0
+#ln -s /usr/lib/openmpi/lib/libopen-pal.so.0.0.0 /usr/lib/openmpi/lib/libopal.so.0
+
 # test for master or compute node:
 # petry: changed this just to look for the words 'nfsroot' rather than
 # the ip address $PELICAN_NETWORK since 'nfsroot' will also only be there at
@@ -265,9 +268,12 @@ else
 		mount $SCRATCHLOCATION $NODE_SCRATCH_MOUNT
 		chmod 777 $FRONTEND_SCRATCH_MOUNT
 	fi 
+	
 	# support software compiled using older Open MPI 
-	ln -s /usr/lib/openmpi/lib/libopen-rte.so.0.0.0 /usr/lib/openmpi/lib/liborte.so.0
-	ln -s /usr/lib/openmpi/lib/libopen-pal.so.0.0.0 /usr/lib/openmpi/lib/libopal.so.0 
+	# jss- commentting these out for now
+	#ln -s /usr/lib/openmpi/lib/libopen-rte.so.0.0.0 /usr/lib/openmpi/lib/liborte.so.0
+	#ln -s /usr/lib/openmpi/lib/libopen-pal.so.0.0.0 /usr/lib/openmpi/lib/libopal.so.0 
+	
 	bailout2
 fi
 

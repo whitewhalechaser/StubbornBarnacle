@@ -36,6 +36,7 @@ apache2 php7.4 rrdtool php7.4-gd
 #ipython3 python-gmpy2-common
 net-tools
 screen 
+lsof
 
 # This section added by jss lists the packages that were
 # previously included, but don't seem to be available from the Debian 
