@@ -47,7 +47,7 @@ bailout2(){
 	echo "user:$PASSWORD" | /usr/sbin/chpasswd
 	# petry: Change node hostname to be unique based on IP
 	#        This is good both when logged into nodes, but also for ganglia.
-	HOST=$(/usr/sbin/ifconfig | tr -d '\n' |sed "s/.*inet addr:$PELICAN_NETWORK.\([^ ]*\) .*/\1/")
+	HOST=$(/usr/sbin/ifconfig | tr -d '\n' |sed "s/.*inet $PELICAN_NETWORK.\([^ ]*\) .*/\1/")
 	NODEHOSTNAME="pel$HOST"
 	#  sed "s/pelican/$NODEHOSTNAME/g" /etc/hostname > /etc/hostname.tmp
 	#  mv /etc/hostname.tmp /etc/hostname
