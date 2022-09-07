@@ -47,12 +47,15 @@ bailout2(){
 	echo "user:$PASSWORD" | /usr/sbin/chpasswd
 	# petry: Change node hostname to be unique based on IP
 	#        This is good both when logged into nodes, but also for ganglia.
-	HOST=$(/usr/sbin/ifconfig | tr -d '\n' |sed "s/.*inet $PELICAN_NETWORK.\([^ ]*\) .*/\1/")
+	# HOST=$(/usr/sbin/ifconfig | tr -d '\n' |sed "s/.*inet $PELICAN_NETWORK.\([^ ]*\) .*/\1/")  # ifconfig is deprecated
+	# jss, this uses the whole ip address as part of the hostname, rather than the last octet
+	HOST=$(/usr/bin/ip -o -4 addr list| grep $PELICAN_NETWORK | awk '{print $4}' | cut -d/ -f1 | tr . -)
 	NODEHOSTNAME="pel$HOST"
 	#  sed "s/pelican/$NODEHOSTNAME/g" /etc/hostname > /etc/hostname.tmp
 	#  mv /etc/hostname.tmp /etc/hostname
 	# Need to change in /etc/hosts or odd errors show up about host resolution.
-	NODEIP=$(/usr/sbin/ifconfig | sed -n '/inet addr:/s/ *inet addr:\([[:digit:].]*\) .*/\1/p' | grep -v "127.0.0.1")
+	# NODEIP=$(/usr/sbin/ifconfig | sed -n '/inet addr:/s/ *inet addr:\([[:digit:].]*\) .*/\1/p' | grep -v "127.0.0.1") # uses deprecated ifconfig
+	NODEIP=$(/usr/bin/ip -o -4 addr list| grep $PELICAN_NETWORK | awk '{print $4}' | cut -d/ -f1)
 cat >> /etc/hosts.tmp <<!HOSTS_NODE_PREAMBLE!
 127.0.0.1	localhost
 $NODEIP	$NODEHOSTNAME
@@ -257,7 +260,8 @@ else
 			shutdown -h now
 		fi
 	fi
-	myip=$(`/usr/sbin/ifconfig | grep -i "Ethernet" -A 1|grep "inet addr"|cut -d  " " -f 12|cut -d ":" -f 2`)
+	#myip=$(`/usr/sbin/ifconfig | grep -i "Ethernet" -A 1|grep "inet addr"|cut -d  " " -f 12|cut -d ":" -f 2`)  #old, based on ifconfig
+	myip=$(/usr/bin/ip -o -4 addr list| grep $PELICAN_NETWORK | awk '{print $4}' | cut -d/ -f1)
 	echo "$myip is up" > /home/user/tmp/$myip
 	# petry: Check for a device with the label "PELSCRATCH" and mount it at
 	# /usr/local/scratch . While /home is exported to all the nodes, it could
