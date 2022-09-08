@@ -18,7 +18,8 @@ xsensors gnuplot xpdf csh tcsh ksh bc
 gparted zip unzip dsh debootstrap syslinux pxelinux live-build
 # WOL
 etherwake beep
-debconf-utils arno-iptables-firewall
+debconf-utils 
+#arno-iptables-firewall
 # octave
 #octave  octave-doc 
 # openmpi
@@ -38,6 +39,7 @@ net-tools
 screen 
 lsof
 firmware-linux
+ntp
 
 # This section added by jss lists the packages that were
 # previously included, but don't seem to be available from the Debian 
