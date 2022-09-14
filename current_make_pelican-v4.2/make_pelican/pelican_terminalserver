@@ -80,11 +80,11 @@ TFTP_ADDRESS=":69"
 TFTP_OPTIONS="--secure"
 TFTP2
 
-
-if [$THIS_IS_PERMANENT_INSTALL = "YES" ];
+#jss- Am setting the 2 variables("THIS_IS_PERMANENT_INSTALL", and "PATH_TO_PELICAN_ISO" in the pelican_config script, in the home dir)
+if [ $THIS_IS_PERMANENT_INSTALL = "YES" ];
 then
 	# mount the iso 
-	mount -o loop  $PATH_TO_MOST_CURRENT_PELICAN_ISO /usr/lib/live/mount/medium
+	mount -o loop  $PATH_TO_PELICAN_ISO /usr/lib/live/mount/medium
 	#now, need to extract some files from the iso, so need to mount the squashfs thats within the iso
 	install -d /tmp/temp_mount_for_squashfs
 	mount /usr/lib/live/mount/medium/live/filesystem.squashfs  /tmp/temp_mount_for_squashfs -t squashfs -o loop
