@@ -89,8 +89,8 @@ then
 	install -d /tmp/temp_mount_for_squashfs
 	mount /usr/lib/live/mount/medium/live/filesystem.squashfs  /tmp/temp_mount_for_squashfs -t squashfs -o loop
 	
-	#update the scripts from new build, good for dogfooding this thing
-	cp  /tmp/temp_mount_for_squashfs/usr/bin/*pelican* /usr/bin/
+	#update the scripts from new build, good for dogfooding this thing #on second thought, this updates this script while running it, maybe not a good idea...
+	#cp  /tmp/temp_mount_for_squashfs/usr/bin/*pelican* /usr/bin/
 	
 	# this will overwrite the (possibly) previously generated initrd.img (created in the pelican_boot_setup, when server started)
 	cp  /tmp/temp_mount_for_squashfs/initrd.img /srv/tftp/
