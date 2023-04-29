@@ -36,6 +36,7 @@ python-matplotlib-data
 ipython3 python-gmpy2-common 
 net-tools
 screen
+iptables
 
 # This section added by jss lists the packages that were
 # previously included, but don't seem to be available from the Debian 

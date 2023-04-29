@@ -86,6 +86,7 @@ NODEISSUE
 #jss added this iptables nonsense, for some reason after the upgrade to bullseye, the nodes booted with a large number of restrictive
 # iptable rules that prevented pinging or ssh-ing into the nodes.  If anyone figures out where these rules are coming from, then this nonsense can be removed
 # ref: https://wiki.debian.org/iptables
+#NEW NOTE! will need to transition to the nftables utility.  for now, am just going to add iptables to list of packages to include with build
 cat <<BASIC_IPTABLES > /etc/iptables.rules
 *filter
 
