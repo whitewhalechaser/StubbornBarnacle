@@ -43,7 +43,25 @@ sudo cp  /tmp/temp_mount_for_squashfs/etc/rc.local /etc/
 
 echo -n "PelicanHPC" > /home/user/pw
 
-#enable the rc-local service??
+cat << SYSTEMDBS > /etc/systemd/system/rc-local.service
+[Unit]
+Description=/etc/rc.local
+ConditionPathExists=/etc/rc.local
+ 
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+ 
+[Install]
+WantedBy=multi-user.target
+SYSTEMDBS
+
+
+#enable the rc-local service
 systemctl enable rc-local
 
 
