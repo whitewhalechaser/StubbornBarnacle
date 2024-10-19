@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Run this after building an image for the first time, this will copy over the correct files to ther server.  Then reboot.  Probably should make this a separate  project
+#run as "user", with sudo privlidges.  Like this: "sudo sh pre_pelican_setup_script"
+
 #change this path to the path on your machine
 PATH_TO_MOST_CURRENT_PELICAN_ISO="/home/user/stubborn_barnacle/current_make_pelican-v4.2/pelicanhpc-v4.2-min_no_gui.iso"
 
@@ -64,4 +67,8 @@ SYSTEMDBS
 #enable the rc-local service
 systemctl enable rc-local
 
+
+#need to write the following line to /home/user/.ssh/config
+#IdentityFile ~/.ssh/pelicanhpc_rsa
+#not sure how to do that...
 
