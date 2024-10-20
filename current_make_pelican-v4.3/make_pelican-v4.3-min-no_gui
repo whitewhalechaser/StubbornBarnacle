@@ -25,9 +25,9 @@
 # as these packages are installed.
 # See http://pelicanhpc.org for more information.
 
-# PelicanHPC Version 4.2
-# Debian 11.3 (bullseye)
-# Usage: sudo ./make_pelican-v4.2-xfce
+# PelicanHPC Version 4.3
+# Debian 12.0 (bookworm)
+# Usage: sudo ./make_pelican-v4.3-xfce
 
 THISDIR="`pwd`"
 SCRIPTDIR=$THISDIR"/make_pelican"

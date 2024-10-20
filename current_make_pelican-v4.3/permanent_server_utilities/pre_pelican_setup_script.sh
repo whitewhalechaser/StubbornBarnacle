@@ -4,7 +4,7 @@
 #run as "user", with sudo privlidges.  Like this: "sudo sh pre_pelican_setup_script"
 
 #change this path to the path on your machine
-PATH_TO_MOST_CURRENT_PELICAN_ISO="/home/user/stubborn_barnacle/current_make_pelican-v4.2/pelicanhpc-v4.2-min_no_gui.iso"
+PATH_TO_MOST_CURRENT_PELICAN_ISO="/home/user/stubborn_barnacle/current_make_pelican-v4.3/pelicanhpc-v4.3-min_no_gui.iso"
 
 #make sure the appropriate directory exists, then mount the iso on it
 sudo install -d /usr/lib/live/mount/medium
