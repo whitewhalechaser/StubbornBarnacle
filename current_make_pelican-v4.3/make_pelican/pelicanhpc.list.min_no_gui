@@ -39,7 +39,7 @@ net-tools
 screen 
 lsof
 firmware-linux-free
-firmware-linux-non-free
+firmware-linux-nonfree
 ntp
 iptables
 
