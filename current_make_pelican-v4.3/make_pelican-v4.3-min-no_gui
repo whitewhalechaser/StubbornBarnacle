@@ -41,7 +41,7 @@ lb clean
 . $SCRIPTDIR/pelicanhpc.list.min_no_gui
 
 #Name of generated PelicanHPC ISO
-IMAGENAME="pelicanhpc-v4.2-min_no_gui.iso"
+IMAGENAME="pelicanhpc-v4.3-min_no_gui.iso"
 
 ################## OPTIONS FOR IMAGE  ################
 . $SCRIPTDIR/pelicanhpc.setoptions
