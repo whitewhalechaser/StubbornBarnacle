@@ -43,7 +43,7 @@ lb config noauto \\
 	--mirror-binary="${mirror}" \\
 	--mirror-binary-security="${mirror_security}" \\
 	--mirror-debian-installer="${mirror}" \\
-	--archive-areas="main contrib non-free" \\
+	--archive-areas="main contrib non-free non-free-firmware" \\
 	--iso-application="PelicanHPC" \\
 	--iso-volume="PelicanHPC" \\
 	--bootappend-live="noautologin noxautologin hostname=pelican boot=live noeject config quiet splash 3 locales=${pel_locales} keyboard-layouts=${pel_keyboard_layouts}" \\
