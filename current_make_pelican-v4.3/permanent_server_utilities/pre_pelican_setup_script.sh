@@ -29,7 +29,7 @@ sudo cp  /tmp/temp_mount_for_squashfs/boot/vmlinuz-* /srv/tftp/
 
 # now, trying to get the correct file for the below script.  Cannot use 'uname -r', as the server's version of linux may be diff than
 # the version on the iso.  Hoping there is just one "vmlinz..." file.
-        VMLINZ_ON_ISO=$(find /tmp/temp_mount_for_squashfs/boot -type f -name "*vmlinuz-*" -printf "%f")
+        VMLINZ_ON_ISO=$(find /tmp/temp_mount_for_squashfs/boot -maxdepth 1 -type f -name "*vmlinuz-*" -printf "%f")
 
 cat << PXECONFIG > /srv/tftp/pxelinux.cfg/default
 DEFAULT linux
