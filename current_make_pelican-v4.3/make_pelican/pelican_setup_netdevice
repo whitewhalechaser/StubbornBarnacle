@@ -51,21 +51,36 @@ NM="255.255.255.0 "
 BC="$PELICAN_NETWORK.255"
 # petry: Override device if configuration variable defined.
 if [ ! -z "$CLUSTER_NETWORK" ]; then
-	if ! echo $CLUSTER_NETWORK | grep -q "eth" ; then
-		MAC_ADDRESS=$CLUSTER_NETWORK
-		CLUSTER_NETWORK=$(/usr/sbin/ifconfig -a | grep "$MAC_ADDRESS" | cut -f 1 --delimiter=" ")
-		if [ -z "$CLUSTER_NETWORK" ]; then
-			echo "CLUSTER_NETWORK variable $MAC_ADDRESS is not a valid device or MAC address."
-			bailout
-		fi
-	fi
-	DV=$CLUSTER_NETWORK
+        # jss-changed the below line to look for the ":" in a mac address, rather than the absence of a "eth"
+        # since we don't call interfaces "eth" anymore, grr
+        if  echo $CLUSTER_NETWORK | grep -q ":" ; then
+                MAC_ADDRESS=$CLUSTER_NETWORK
+                #jss, changed this to use "ip" rather than "ifconfig" since we don't use ifconfig anymore...GRR.
+                #CLUSTER_NETWORK=$(/usr/sbin/ifconfig -a | grep "$MAC_ADDRESS" | cut -f 1 --delimiter=" ")
+                CLUSTER_NETWORK=$(/usr/sbin/ip -br link | grep "$MAC_ADDRESS" | cut -f 1 --delimiter=" ")
+                if [ -z "$CLUSTER_NETWORK" ]; then
+                        echo "CLUSTER_NETWORK variable $MAC_ADDRESS is not a valid device or MAC address."
+                        bailout
+                fi
+        fi
+        DV=$CLUSTER_NETWORK
 fi
+
 # fixing problem>ifdown: interface xxxx not configured< when trying to discounnect network device
 nmcli d disconnect $DV >/dev/null 2>&1
 sleep 4
-CMD="/usr/sbin/ifconfig $DV $IP netmask $NM broadcast $BC up"
-$CMD
+
+# jss this was the old command, using ifconfig
+#CMD="/usr/sbin/ifconfig $DV $IP netmask $NM broadcast $BC up"
+
+#and now,using ip, the new, split into 2 parts
+CMD1="ip a add $IP/24 dev $DV"
+echo $CMD1
+$CMD1
+CMD2="ip link set dev $DV up"
+echo $CMD2
+$CMD2
+
 sleep 4
 # petry: configure firewall
 if [ ! "$FIREWALL" = "YES" ]; then
