@@ -30,8 +30,8 @@ dynare dynare-doc
 #gretl gretl-data gretl-doc gretl-common
 # ganglia, firewall
 #ganglia-monitor gmetad libganglia1 ganglia-webfrontend
-librrds-perl firefox-esr
-apache2 php8.2 rrdtool php8.2-gd
+#librrds-perl firefox-esr
+#apache2 php8.2 rrdtool php8.2-gd
 # Python
 #python-matplotlib-data 
 #ipython3 python-gmpy2-common
@@ -42,6 +42,8 @@ firmware-linux-free
 firmware-linux-nonfree
 ntp
 iptables
+htop
+
 
 # This section added by jss lists the packages that were
 # previously included, but don't seem to be available from the Debian 
