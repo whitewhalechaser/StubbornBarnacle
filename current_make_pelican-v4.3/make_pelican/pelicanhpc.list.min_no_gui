@@ -43,6 +43,10 @@ firmware-linux-nonfree
 ntp
 iptables
 htop
+diffutils
+gcc
+m4
+make
 
 
 # This section added by jss lists the packages that were
